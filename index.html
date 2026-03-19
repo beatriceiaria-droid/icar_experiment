@@ -1,23 +1,27 @@
 <!doctype html>
 <html>
   <head>
+    <title>ICAR Experiment</title>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-    <title>tentaiveonline [PsychoPy]</title>
-    <!-- styles -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jquery-ui-dist@1.12.1/jquery-ui.min.css">
-    <link rel="stylesheet" href="./lib/psychojs-2026.1.1.css">
+    <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <link rel="stylesheet" href="https://unpkg.com/psychojs@2024.1.0/dist/psychojs.css">
+    <script src="https://unpkg.com/psychojs@2024.1.0/dist/psychojs.js"></script>
   </head>
   <body>
     <div id="root"></div>
-    <!-- external libraries -->
-    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jquery-ui-dist@1.12.1/jquery-ui.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/preloadjs@1.0.1/lib/preloadjs.min.js"></script>
-    <!-- experiment -->
-    <script src="./tentaiveonline.js" type="module"></script>
-    <!-- legacy browsers -->
-    <script src="./lib/psychojs-2026.1.1.iife.js" nomodule></script>
-    <script src="./tentaiveonline-legacy-browsers.js" nomodule></script>
+    <script type="module">
+        import { PsychoJS } from 'https://unpkg.com/psychojs@2024.1.0/dist/psychojs.js';
+        import * as experiment from './tentaiveonline.js';
+
+        const psychoJS = new PsychoJS({
+            debug: true
+        });
+
+        psychoJS.start({
+            expName: 'tentaiveonline',
+            expInfo: { 'participant': '' },
+        });
+    </script>
   </body>
 </html>
