@@ -4,22 +4,26 @@
     <title>ICAR Experiment</title>
     <meta charset="utf-8">
     <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
-    <link rel="stylesheet" href="https://pavlovia.org/lib/psychojs-2024.1.0.css">
+    
+    <link rel="stylesheet" href="lib/psychojs-2026.1.1.css">
   </head>
   <body>
     <div id="root"></div>
     <script type="module">
-        import { PsychoJS } from 'https://pavlovia.org/lib/psychojs-2024.1.0.js';
-        import * as experiment from './tentaiveonline.js';
+      // Importa PsychoJS dai tuoi file locali
+      import { PsychoJS } from './lib/psychojs-2026.1.1.js';
+      import * as experiment from './tentativeonline.js';
 
-        const psychoJS = new PsychoJS({
-            debug: true
-        });
+      // Inizializza l'esperimento
+      const psychoJS = new PsychoJS({
+        debug: true
+      });
 
-        psychoJS.start({
-            expName: 'tentaiveonline',
-            expInfo: { 'participant': '' },
-        });
+      // Avvia l'esperimento
+      psychoJS.start({
+        expName: 'tentativeonline',
+        expInfo: { 'participant': '' },
+      });
     </script>
   </body>
 </html>
