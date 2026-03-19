@@ -6,20 +6,23 @@
     <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
     
     <link rel="stylesheet" href="lib/psychojs-2026.1.1.css">
+    
+    <script src="lib/psychojs-2026.1.1.js"></script>
   </head>
   <body>
     <div id="root"></div>
     <script type="module">
-      // Importa PsychoJS dai tuoi file locali
-      import { PsychoJS } from './lib/psychojs-2026.1.1.js';
+      // 3. Importiamo solo il tuo esperimento specifico
       import * as experiment from './tentativeonline.js';
 
-      // Inizializza l'esperimento
+      // 4. Usiamo l'oggetto globale che la libreria crea automaticamente
+      // Nelle versioni 2024/2026, PsychoJS si registra spesso sotto l'oggetto 'psychojs'
+      const { PsychoJS } = psychojs; 
+
       const psychoJS = new PsychoJS({
         debug: true
       });
 
-      // Avvia l'esperimento
       psychoJS.start({
         expName: 'tentativeonline',
         expInfo: { 'participant': '' },
