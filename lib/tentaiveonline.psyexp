@@ -68,7 +68,7 @@
     <Param val="1000" valType="num" updates="None" name="plPupilRemoteTimeoutMs"/>
     <Param val="False" valType="bool" updates="None" name="plPupillometryOnly"/>
     <Param val="psychopy_iohub_surface" valType="str" updates="None" name="plSurfaceName"/>
-    <Param val="1" valType="code" updates="None" name="runMode"/>
+    <Param val="0" valType="code" updates="None" name="runMode"/>
     <Param val="False" valType="bool" updates="None" name="rush"/>
     <Param val="time" valType="str" updates="None" name="sortColumns"/>
     <Param val="" valType="str" updates="None" name="tbLicenseFile"/>
@@ -2264,10 +2264,10 @@
         <Param val="" valType="extendedCode" updates="constant" name="Begin JS Experiment"/>
         <Param val="" valType="extendedCode" updates="constant" name="Begin JS Routine"/>
         <Param val="" valType="extendedCode" updates="constant" name="Begin Routine"/>
-        <Param val="JS" valType="str" updates="None" name="Code Type"/>
+        <Param val="Both" valType="str" updates="None" name="Code Type"/>
         <Param val="" valType="extendedCode" updates="constant" name="Each Frame"/>
         <Param val="" valType="extendedCode" updates="constant" name="Each JS Frame"/>
-        <Param val="window.collectData = function() {&amp;#10;  const data = psychoJS.experiment.save({&amp;#10;    attributes: []&amp;#10;  });&amp;#10;  &amp;#10;  fetch(&quot;https://pipe.jspsych.org/api/data/&quot;, {&amp;#10;    method: &quot;POST&quot;,&amp;#10;    headers: {&amp;#10;      &quot;Content-Type&quot;: &quot;application/json&quot;,&amp;#10;      &quot;Accept&quot;: &quot;application/json&quot;,&amp;#10;    },&amp;#10;    body: JSON.stringify({&amp;#10;      experimentID: &quot;IL_TUO_ID_DATAPIPE&quot;, // Incolla qui l'ID&amp;#10;      filename: `data_${expName}_${psychoJS.experiment.extraInfo['participant']}.csv`,&amp;#10;      data: data,&amp;#10;    }),&amp;#10;  });&amp;#10;};&amp;#10;&amp;#10;window.collectData();" valType="extendedCode" updates="constant" name="End Experiment"/>
+        <Param val="" valType="extendedCode" updates="constant" name="End Experiment"/>
         <Param val="const results_data = psychoJS.experiment.save({&amp;#10;  attributes: []&amp;#10;});&amp;#10;&amp;#10;fetch(&quot;https://pipe.jspsych.org/api/data/&quot;, {&amp;#10;  method: &quot;POST&quot;,&amp;#10;  headers: {&amp;#10;    &quot;Content-Type&quot;: &quot;application/json&quot;,&amp;#10;    Accept: &quot;*/*&quot;,&amp;#10;  },&amp;#10;  body: JSON.stringify({&amp;#10;    experimentID: &quot;IGJG7547rP0O&quot;,&amp;#10;    filename: `data_${expName}_${psychoJS.experiment.extraInfo['participant']}.csv`,&amp;#10;    data: results_data,&amp;#10;  }),&amp;#10;});" valType="extendedCode" updates="constant" name="End JS Experiment"/>
         <Param val="" valType="extendedCode" updates="constant" name="End JS Routine"/>
         <Param val="" valType="extendedCode" updates="constant" name="End Routine"/>
