@@ -243,23 +243,29 @@ function trialsLoopEnd() { return Scheduler.Event.NEXT; }
 function importConditions(s) { return async function () { psychoJS.importAttributes(s); return Scheduler.Event.NEXT; }; }
 
 async function quitPsychoJS(message, isCompleted) {
-    // Generate data string
+    // 1. Genera la stringa dei risultati
     const results = psychoJS.experiment.save({attributes: expInfo});
 
-    // Upload to DataPipe
-    fetch("https://pipe.jspsych.org/api/v1/data", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Accept": "*/*"
-        },
-        body: JSON.stringify({
-            experimentID: DATAPIPE_ID,
-            filename: `${psychoJS.experiment.dataFileName}.csv`,
-            data: results
-        })
-    });
+    // 2. Tenta l'invio a DataPipe e ASPETTA (await) che finisca
+    try {
+        const response = await fetch("https://pipe.jspsych.org/api/v1/data", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "*/*"
+            },
+            body: JSON.stringify({
+                experimentID: DATAPIPE_ID,
+                filename: `${psychoJS.experiment.dataFileName}.csv`,
+                data: results
+            })
+        });
+        console.log("DataPipe Response:", response);
+    } catch (error) {
+        console.error("Errore durante l'invio dei dati:", error);
+    }
 
+    // 3. Chiudi la finestra solo dopo l'invio
     psychoJS.window.close();
     psychoJS.quit({message, isCompleted});
     return Scheduler.Event.QUIT;
