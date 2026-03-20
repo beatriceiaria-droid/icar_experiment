@@ -12,40 +12,27 @@
 
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jquery-ui-dist@1.12.1/jquery-ui.min.js"></script>
+    <script src="https://code.createjs.com/1.0.0/preloadjs.min.js"></script>
 
     <script type="module">
-      import { PsychoJS } from './lib/psychojs-2026.1.1.js';
-      import * as util from './lib/psychojs-2026.1.1.js';
-
-      const psychoJS = new PsychoJS({
+      // Importiamo tutto il pacchetto core
+      import * as pjs from './lib/psychojs-2026.1.1.js';
+      
+      const psychoJS = new pjs.core.PsychoJS({
         debug: true
       });
 
-      // Creiamo la lista delle risorse
-      let resources = [
-        { name: 'conditions_3DR.csv', path: './resources/conditions_3DR.csv' },
-        { name: 'conditions_LN.csv', path: './resources/conditions_LN.csv' },
-        { name: 'conditions_MX.csv', path: './resources/conditions_MX.csv' },
-        { name: 'conditions_VR.csv', path: './resources/conditions_VR.csv' },
-        // Risolviamo l'errore default.png puntando alla tua prima immagine
-        { name: 'default.png', path: './resources/images/image_3DR/fig11001.png' }
-      ];
-
-      // Aggiungiamo automaticamente le immagini da 11001 a 11066 (modifica i numeri se ne hai di più)
-      for (let i = 11001; i <= 11066; i++) {
-        const fileName = `fig${i}.png`;
-        resources.push({
-          name: `images/image_3DR/${fileName}`,
-          path: `./resources/images/image_3DR/${fileName}`
-        });
-      }
-
-      // Avvio dell'esperimento
       psychoJS.start({
         expName: 'tentativeonline',
         expInfo: { 'participant': '' },
-        resources: resources
+        resources: [
+          { name: 'conditions_3DR.csv', path: './resources/conditions_3DR.csv' },
+          { name: 'default.png', path: './resources/images/image_3DR/fig11001.png' }
+        ]
       });
+      
+      // Esponiamo psychoJS globalmente per il file tentativeonline.js
+      window.psychoJS = psychoJS;
     </script>
 
     <script src="./tentativeonline.js" type="module"></script>
