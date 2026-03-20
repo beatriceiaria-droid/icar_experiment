@@ -1,5 +1,6 @@
-/************************ * Tentativeonline - GRAPHICS & LOADING FIX
- * 4 Blocks: LN -> VR -> 3DR -> MX
+/************************ * Tentativeonline - FINAL STABLE VERSION
+ * 4 Blocks: LN -> VR -> 3DR -> MX | 4 Random trials each
+ * Graphic: Progress Bar + Click Feedback + Font Fix
  ************************/
 
 import { core, data, sound, util, visual, hardware } from './lib/psychojs-2026.1.1.js';
@@ -31,7 +32,7 @@ psychoJS.scheduleCondition(function() { return (psychoJS.gui.dialogComponent.but
 flowScheduler.add(updateInfo);
 flowScheduler.add(experimentInit);
 
-// SEQUENCE
+// SEQUENCE: LN -> VR -> 3DR -> MX
 const blocks = [
     { name: 'LN', file: 'conditions_LN.csv' },
     { name: 'VR', file: 'conditions_VR.csv' },
@@ -46,10 +47,10 @@ for (const block of blocks) {
     flowScheduler.add(trialsLoopEnd);
 }
 
-flowScheduler.add(quitPsychoJS, 'Experiment Completed.', true);
+flowScheduler.add(quitPsychoJS, 'Experiment Completed. Thank you!', true);
 dialogCancelScheduler.add(quitPsychoJS, 'Session Cancelled.', false);
 
-// --- RESOURCE LOADING FIX ---
+// --- RESOURCE LIST (PRECISE PATHS) ---
 let resources = [
     { name: 'conditions_LN.csv', path: './resources/conditions_LN.csv' },
     { name: 'conditions_VR.csv', path: './resources/conditions_VR.csv' },
@@ -57,13 +58,13 @@ let resources = [
     { name: 'conditions_MX.csv', path: './resources/conditions_MX.csv' }
 ];
 
-// Manually pre-loading to avoid the "Unknown Resource" error
+// Pre-loading 3DR (.png)
 for (let i = 11001; i <= 11066; i++) {
     resources.push({ name: `images/image_3DR/fig${i}.png`, path: `./resources/images/image_3DR/fig${i}.png` });
 }
+// Pre-loading MX (.jpg)
 const mx_ids = [12043, 12044, 12045, 12046, 12047, 12048, 12050, 12053, 12054, 12055, 12056];
 for (let id of mx_ids) {
-    // We map the .png name from CSV to the .jpg file on server
     resources.push({ name: `images/image_MX/fig${id}.png`, path: `./resources/images/image_MX/fig${id}.jpg` });
 }
 
@@ -79,37 +80,49 @@ async function updateInfo() {
     return Scheduler.Event.NEXT;
 }
 
-var routineClock, mainImage, mainQ, mouse;
+var routineClock, mainImage, mainQ, mouse, progressBar, progressBox;
 var opt_texts = [];
 var opt_boxes = [];
+var totalQuestions = 16;
+var currentQuestionIdx = 0;
 
 async function experimentInit() {
     routineClock = new util.Clock();
 
     mainImage = new visual.ImageStim({
         win: psychoJS.window, name: 'mainImage', image: undefined,
-        pos: [0, 0.2], size: [0.6, 0.45] // Adjusted for better graphics
+        pos: [0, 0.15], size: [0.55, 0.4]
     });
 
     mainQ = new visual.TextStim({
         win: psychoJS.window, name: 'mainQ', text: '',
-        font: 'Hiragino Kaku Gothic Pro', pos: [0, 0.42], height: 0.03, color: new util.Color('white'),
+        font: 'Hiragino Kaku Gothic Pro', pos: [0, 0.42], height: 0.028, color: new util.Color('white'),
         wrapWidth: 0.9, alignHoriz: 'center'
     });
 
+    // Progress Bar (bottom)
+    progressBox = new visual.Rect({
+        win: psychoJS.window, name: 'progressBox', width: 0.8, height: 0.01,
+        pos: [0, -0.48], lineColor: new util.Color('grey'), fillColor: null
+    });
+    progressBar = new visual.Rect({
+        win: psychoJS.window, name: 'progressBar', width: 0, height: 0.01,
+        pos: [-0.4, -0.48], fillColor: new util.Color('white'), lineColor: null
+    });
+
     const x_positions = [-0.48, -0.16, 0.16, 0.48, -0.48, -0.16, 0.16, 0.48];
-    const y_positions = [-0.25, -0.25, -0.25, -0.25, -0.38, -0.38, -0.38, -0.38];
+    const y_positions = [-0.22, -0.22, -0.22, -0.22, -0.35, -0.35, -0.35, -0.35];
 
     for (let i = 0; i < 8; i++) {
         opt_boxes[i] = new visual.Rect({
             win: psychoJS.window, name: `box_${i+1}`,
-            width: 0.3, height: 0.11, pos: [x_positions[i], y_positions[i]],
-            lineColor: new util.Color('white'), fillColor: new util.Color('white'), lineWidth: 2
+            width: 0.3, height: 0.1, pos: [x_positions[i], y_positions[i]],
+            lineColor: new util.Color('white'), fillColor: new util.Color('white')
         });
         opt_texts[i] = new visual.TextStim({
             win: psychoJS.window, name: `text_${i+1}`,
             text: '', font: 'Hiragino Kaku Gothic Pro', pos: [x_positions[i], y_positions[i]],
-            height: 0.025, color: new util.Color('black')
+            height: 0.022, color: new util.Color('black')
         });
     }
 
@@ -144,11 +157,22 @@ function routineBegin(thisTrial) {
     return async function () {
         routineClock.reset();
         window.mouseWasReleased = false; 
+        currentQuestionIdx++;
+
+        // Update Progress Bar
+        let progressWidth = (currentQuestionIdx / totalQuestions) * 0.8;
+        progressBar.setWidth(progressWidth);
+        progressBar.setPos([-0.4 + (progressWidth/2), -0.48]);
 
         const imgName = thisTrial['image_file'];
         if (imgName && !imgName.includes('blank')) {
-            mainImage.setImage(imgName);
-            mainImage.setOpacity(1.0);
+            try {
+                mainImage.setImage(imgName);
+                mainImage.setOpacity(1.0);
+            } catch (e) {
+                console.log("Resource skipped: ", imgName);
+                mainImage.setOpacity(0.0);
+            }
         } else {
             mainImage.setOpacity(0.0);
         }
@@ -159,7 +183,7 @@ function routineBegin(thisTrial) {
         for (let i = 1; i <= 8; i++) {
             let val = thisTrial[`choice${i}`];
             opt_texts[i-1].setText(val !== undefined && val !== null ? val.toString() : "");
-            opt_boxes[i-1].setFillColor(new util.Color('white')); // Reset color
+            opt_boxes[i-1].setFillColor(new util.Color('white'));
         }
 
         return Scheduler.Event.NEXT;
@@ -170,6 +194,8 @@ function routineFrame() {
     return async function () {
         mainImage.setAutoDraw(true);
         mainQ.setAutoDraw(true);
+        progressBox.setAutoDraw(true);
+        progressBar.setAutoDraw(true);
         for (let i = 0; i < 8; i++) {
             opt_boxes[i].setAutoDraw(true);
             opt_texts[i].setAutoDraw(true);
@@ -181,7 +207,7 @@ function routineFrame() {
         if (pressed[0] === 1 && window.mouseWasReleased) {
             for (let i = 0; i < 8; i++) {
                 if (opt_boxes[i].contains(mouse)) {
-                    opt_boxes[i].setFillColor(new util.Color('lightgrey')); // Visual feedback
+                    opt_boxes[i].setFillColor(new util.Color('lightgrey'));
                     return Scheduler.Event.NEXT;
                 }
             }
@@ -194,6 +220,8 @@ function routineEnd() {
     return async function () {
         mainImage.setAutoDraw(false);
         mainQ.setAutoDraw(false);
+        progressBox.setAutoDraw(false);
+        progressBar.setAutoDraw(false);
         for (let i = 0; i < 8; i++) {
             opt_boxes[i].setAutoDraw(false);
             opt_texts[i].setAutoDraw(false);
