@@ -45,7 +45,7 @@ dialogCancelScheduler.add(quitPsychoJS, 'Sessione annullata.', false);
 // --- RISORSE ---
 let resources = [
     { name: 'conditions_3DR.csv', path: './resources/conditions_3DR.csv' },
-    { name: 'default.png', path: './resources/images/image_3DR/fig11001.png' }
+    { name: 'default.png', path: './resources/default.png' }
 ];
 for (let i = 11001; i <= 11066; i++) {
     const img = `images/image_3DR/fig${i}.png`;
