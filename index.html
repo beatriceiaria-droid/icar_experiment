@@ -1,39 +1,34 @@
 <!doctype html>
 <html>
   <head>
+    <title>ICAR Experiment</title>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-    <title>tentativeonline [PsychoPy]</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jquery-ui-dist@1.12.1/jquery-ui.min.css">
+    <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
+    
     <link rel="stylesheet" href="./lib/psychojs-2026.1.1.css">
   </head>
   <body>
     <div id="root"></div>
-    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jquery-ui-dist@1.12.1/jquery-ui.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/preloadjs@1.0.1/lib/preloadjs.min.js"></script>
-    <script>
-      // Intercetta il risultato del file iife e lo espone globalmente
-      const _iife_orig = Function.prototype.call;
-      Function.prototype.call = function(ctx, ...args) {
-        const result = _iife_orig.apply(this, [ctx, ...args]);
-        if (result && result.core && result.util) {
-          Object.assign(window, result);
-          window.PsychoJS = result.core.PsychoJS;
-          window.util = result.util;
-          window.core = result.core;
-          window.data = result.data;
-          window.sound = result.sound;
-          window.visual = result.visual;
-          window.hardware = result.hardware;
-        }
-        return result;
-      };
+    
+    <script type="module">
+      // Importiamo la classe PsychoJS dal file modulo
+      import { PsychoJS } from './lib/psychojs-2026.1.1.js';
+      
+      // Importiamo il TUO esperimento (nome corretto con la 't')
+      import * as experiment from './tentativeonline.js';
+
+      // Inizializzazione
+      const psychoJS = new PsychoJS({
+        debug: true
+      });
+
+      // Avvio dell'esperimento
+      psychoJS.start({
+        expName: 'tentativeonline',
+        expInfo: { 'participant': '' },
+      });
     </script>
-    <script src="./lib/psychojs-2026.1.1.iife.js"></script>
-    <script>
-      Function.prototype.call = _iife_orig;
-    </script>
-    <script src="./tentativeonline-legacy-browsers.js"></script>
+  </body>
+</html>    <script src="./tentativeonline-legacy-browsers.js"></script>
   </body>
 </html>
