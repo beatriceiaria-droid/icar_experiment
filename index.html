@@ -15,15 +15,13 @@
     <script src="https://code.createjs.com/1.0.0/preloadjs.min.js"></script>
 
     <script type="module">
-      // Importiamo i componenti specifici dal tuo file lib
       import { core, data, util, visual, sound } from './lib/psychojs-2026.1.1.js';
 
-      // Creiamo l'istanza usando core.PsychoJS
       const psychoJS = new core.PsychoJS({
         debug: true
       });
 
-      // Rendiamo tutto disponibile globalmente per tentativeonline.js
+      // Rendiamo tutto disponibile globalmente per il file tentativeonline.js
       window.psychoJS = psychoJS;
       window.core = core;
       window.data = data;
@@ -31,14 +29,18 @@
       window.visual = visual;
       window.sound = sound;
 
-      // Avviamo l'esperimento
+      // LISTA RISORSE: Aggiungi qui i file fondamentali
+      // Se l'errore persiste per un'altra immagine, aggiungila qui sotto
+      const resources = [
+        { name: 'conditions_3DR.csv', path: './resources/conditions_3DR.csv' },
+        { name: 'default.png', path: './resources/images/image_3DR/fig11001.png' },
+        { name: 'images/image_3DR/fig11001.png', path: './resources/images/image_3DR/fig11001.png' }
+      ];
+
       psychoJS.start({
         expName: 'tentativeonline',
         expInfo: { 'participant': '' },
-        resources: [
-          { name: 'conditions_3DR.csv', path: './resources/conditions_3DR.csv' },
-          { name: 'default.png', path: './resources/images/image_3DR/fig11001.png' }
-        ]
+        resources: resources
       });
     </script>
 
