@@ -15,13 +15,23 @@
     <script src="https://code.createjs.com/1.0.0/preloadjs.min.js"></script>
 
     <script type="module">
-      // Importiamo tutto il pacchetto core
-      import * as pjs from './lib/psychojs-2026.1.1.js';
-      
-      const psychoJS = new pjs.core.PsychoJS({
+      // Importiamo i componenti specifici dal tuo file lib
+      import { core, data, util, visual, sound } from './lib/psychojs-2026.1.1.js';
+
+      // Creiamo l'istanza usando core.PsychoJS
+      const psychoJS = new core.PsychoJS({
         debug: true
       });
 
+      // Rendiamo tutto disponibile globalmente per tentativeonline.js
+      window.psychoJS = psychoJS;
+      window.core = core;
+      window.data = data;
+      window.util = util;
+      window.visual = visual;
+      window.sound = sound;
+
+      // Avviamo l'esperimento
       psychoJS.start({
         expName: 'tentativeonline',
         expInfo: { 'participant': '' },
@@ -30,9 +40,6 @@
           { name: 'default.png', path: './resources/images/image_3DR/fig11001.png' }
         ]
       });
-      
-      // Esponiamo psychoJS globalmente per il file tentativeonline.js
-      window.psychoJS = psychoJS;
     </script>
 
     <script src="./tentativeonline.js" type="module"></script>
