@@ -27,7 +27,6 @@ psychoJS.scheduleCondition(function() { return (psychoJS.gui.dialogComponent.but
 flowScheduler.add(updateInfo);
 flowScheduler.add(experimentInit);
 
-// Trial scheduler setup
 const ROT_trialsLoopScheduler = new Scheduler(psychoJS);
 flowScheduler.add(ROT_trialsLoopBegin(ROT_trialsLoopScheduler));
 flowScheduler.add(ROT_trialsLoopScheduler);
@@ -36,12 +35,10 @@ flowScheduler.add(ROT_trialsLoopEnd);
 flowScheduler.add(quitPsychoJS, 'Experiment Completed.', true);
 dialogCancelScheduler.add(quitPsychoJS, 'Session Cancelled.', false);
 
-// Load resources using the exact nested folder structure
 let resources = [
     { name: 'conditions_3DR.csv', path: './resources/conditions_3DR.csv' }
 ];
 
-// Loop to push all 66 images into the resources array with the correct path
 for (let i = 11001; i <= 11066; i++) {
     const csvName = `images/image_3DR/fig${i}.png`;
     const actualPath = `./resources/images/image_3DR/fig${i}.png`;
@@ -60,7 +57,6 @@ async function updateInfo() {
     return Scheduler.Event.NEXT;
 }
 
-// Visual components declaration
 var routine_3DR_trialClock, ROT_image, ROT_Q, mouse_2;
 var rot_opts = [];
 var rot_pols = [];
@@ -69,11 +65,8 @@ async function experimentInit() {
     routine_3DR_trialClock = new util.Clock();
 
     ROT_image = new visual.ImageStim({
-        win: psychoJS.window,
-        name: 'ROT_image',
-        image: undefined,
-        pos: [0, 0.25],
-        size: [0.8, 0.4]
+        win: psychoJS.window, name: 'ROT_image', image: undefined,
+        pos: [0, 0.25], size: [0.8, 0.4]
     });
 
     ROT_Q = new visual.TextStim({
@@ -105,17 +98,13 @@ function ROT_trialsLoopBegin(scheduler, snapshot) {
     return async function() {
         let trials = new TrialHandler({
             psychoJS: psychoJS, nReps: 1, method: TrialHandler.Method.RANDOM,
-            extraInfo: expInfo,
-            trialList: 'conditions_3DR.csv',
-            name: 'ROT_trials'
+            extraInfo: expInfo, trialList: 'conditions_3DR.csv', name: 'ROT_trials'
         });
         psychoJS.experiment.addLoop(trials);
 
         for (const thisTrial of trials) {
             const currentSnapshot = trials.getSnapshot();
             scheduler.add(importConditions(currentSnapshot));
-            
-            // WE PASS thisTrial DIRECTLY (Pure JavaScript Object)
             scheduler.add(routineBegin(thisTrial));
             scheduler.add(routineFrame());
             scheduler.add(routineEnd());
@@ -127,12 +116,12 @@ function ROT_trialsLoopBegin(scheduler, snapshot) {
 function routineBegin(thisTrial) {
     return async function () {
         routine_3DR_trialClock.reset();
+        
+        // REGOLE DI SICUREZZA MOUSE
+        window.mouseWasReleased = false; 
 
-        // Safe extraction from the row dictionary
         const imgName = thisTrial['image_file'];
-        if (imgName) {
-            ROT_image.setImage(imgName);
-        }
+        if (imgName) ROT_image.setImage(imgName);
 
         const qText = thisTrial['QUESTION'];
         ROT_Q.setText(qText !== undefined && qText !== null ? qText.toString() : "");
@@ -156,8 +145,28 @@ function routineFrame() {
         }
 
         const pressed = mouse_2.getPressed();
-        if (pressed[0] === 1 || pressed[0] === true) {
-            return Scheduler.Event.NEXT;
+        
+        // CONTROLLO 1: L'utente ha alzato il dito dal mouse?
+        if (pressed[0] === 0) {
+            window.mouseWasReleased = true;
+        }
+
+        // CONTROLLO 2: L'utente ha cliccato di nuovo E aveva rilasciato il tasto?
+        if (pressed[0] === 1 && window.mouseWasReleased) {
+            
+            // CONTROLLO 3: Ha cliccato dentro uno degli 8 rettangoli?
+            let clickedInsideBox = false;
+            for (let i = 0; i < 8; i++) {
+                if (rot_pols[i].contains(mouse_2)) {
+                    clickedInsideBox = true;
+                    break;
+                }
+            }
+            
+            // Se ha cliccato il box, passa alla domanda successiva
+            if (clickedInsideBox) {
+                return Scheduler.Event.NEXT;
+            }
         }
 
         return Scheduler.Event.FLIP_REPEAT;
