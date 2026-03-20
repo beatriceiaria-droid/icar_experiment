@@ -1,6 +1,3 @@
-/************************ * Tentativeonline *
- ************************/
-
 import { core, data, sound, util, visual, hardware } from './lib/psychojs-2026.1.1.js';
 const { PsychoJS } = core;
 const { TrialHandler } = data;
@@ -84,7 +81,6 @@ async function experimentInit() {
         font: 'Arial Unicode MS', pos: [-0.35, 0.35], height: 0.04, color: new util.Color('white')
     });
 
-    // Box coordinates for the 8 choices
     const x_positions = [-0.45, -0.15, 0.15, 0.45, -0.45, -0.15, 0.15, 0.45];
     const y_positions = [-0.22, -0.22, -0.22, -0.22, -0.37, -0.37, -0.37, -0.37];
 
@@ -118,7 +114,9 @@ function ROT_trialsLoopBegin(scheduler, snapshot) {
         for (const thisTrial of trials) {
             const currentSnapshot = trials.getSnapshot();
             scheduler.add(importConditions(currentSnapshot));
-            scheduler.add(routineBegin(currentSnapshot));
+            
+            // WE PASS thisTrial DIRECTLY (Pure JavaScript Object)
+            scheduler.add(routineBegin(thisTrial));
             scheduler.add(routineFrame());
             scheduler.add(routineEnd());
         }
@@ -126,22 +124,21 @@ function ROT_trialsLoopBegin(scheduler, snapshot) {
     }
 }
 
-function routineBegin(snapshot) {
+function routineBegin(thisTrial) {
     return async function () {
         routine_3DR_trialClock.reset();
 
-        // FIX: Replaced .getValue() with bracket notation []
-        const imgName = snapshot['image_file'];
-        
+        // Safe extraction from the row dictionary
+        const imgName = thisTrial['image_file'];
         if (imgName) {
             ROT_image.setImage(imgName);
         }
 
-        const qText = snapshot['QUESTION'];
+        const qText = thisTrial['QUESTION'];
         ROT_Q.setText(qText !== undefined && qText !== null ? qText.toString() : "");
 
         for (let i = 1; i <= 8; i++) {
-            let val = snapshot[`choice${i}`];
+            let val = thisTrial[`choice${i}`];
             rot_opts[i-1].setText(val !== undefined && val !== null ? val.toString() : "");
         }
 
@@ -158,7 +155,6 @@ function routineFrame() {
             rot_opts[i].setAutoDraw(true);
         }
 
-        // Proceed to next trial on mouse click
         const pressed = mouse_2.getPressed();
         if (pressed[0] === 1 || pressed[0] === true) {
             return Scheduler.Event.NEXT;
