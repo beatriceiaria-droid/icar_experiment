@@ -21,7 +21,6 @@
         debug: true
       });
 
-      // Rendiamo tutto disponibile globalmente per il file tentativeonline.js
       window.psychoJS = psychoJS;
       window.core = core;
       window.data = data;
@@ -29,13 +28,19 @@
       window.visual = visual;
       window.sound = sound;
 
-      // LISTA RISORSE: Aggiungi qui i file fondamentali
-      // Se l'errore persiste per un'altra immagine, aggiungila qui sotto
-      const resources = [
+      // Definiamo le risorse
+      let resources = [
         { name: 'conditions_3DR.csv', path: './resources/conditions_3DR.csv' },
-        { name: 'default.png', path: './resources/images/image_3DR/fig11001.png' },
-        { name: 'images/image_3DR/fig11001.png', path: './resources/images/image_3DR/fig11001.png' }
+        // Fix per l'errore default.png: usiamo la prima immagine come rimpiazzo
+        { name: 'default.png', path: './resources/images/image_3DR/fig11001.png' }
       ];
+
+      // AGGIUNTA AUTOMATICA IMMAGINI:
+      // Questo ciclo aggiunge tutte le immagini fig11001.png...fig11066.png alla memoria
+      for (let i = 11001; i <= 11066; i++) {
+        const resPath = `images/image_3DR/fig${i}.png`;
+        resources.push({ name: resPath, path: `./resources/${resPath}` });
+      }
 
       psychoJS.start({
         expName: 'tentativeonline',
