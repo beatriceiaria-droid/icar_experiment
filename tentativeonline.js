@@ -1,7 +1,3 @@
-/************************ * Tentativeonline - Full Experiment
- * Sequence: LN -> VR -> 3DR -> MX
- ************************/
-
 import { core, data, sound, util, visual, hardware } from './lib/psychojs-2026.1.1.js';
 const { PsychoJS } = core;
 const { TrialHandler } = data;
@@ -31,7 +27,7 @@ psychoJS.scheduleCondition(function() { return (psychoJS.gui.dialogComponent.but
 flowScheduler.add(updateInfo);
 flowScheduler.add(experimentInit);
 
-// --- SEQUENZA DEI BLOCCHI (LN -> VR -> 3DR -> MX) ---
+// --- SEQUENCE: LN -> VR -> 3DR -> MX ---
 const blocks = [
     { name: 'LN', file: 'conditions_LN.csv' },
     { name: 'VR', file: 'conditions_VR.csv' },
@@ -49,7 +45,7 @@ for (const block of blocks) {
 flowScheduler.add(quitPsychoJS, 'Experiment Completed.', true);
 dialogCancelScheduler.add(quitPsychoJS, 'Session Cancelled.', false);
 
-// --- CARICAMENTO RISORSE ---
+// --- RESOURCES ---
 let resources = [
     { name: 'conditions_LN.csv', path: './resources/conditions_LN.csv' },
     { name: 'conditions_VR.csv', path: './resources/conditions_VR.csv' },
@@ -57,12 +53,10 @@ let resources = [
     { name: 'conditions_MX.csv', path: './resources/conditions_MX.csv' }
 ];
 
-// 3DR Images (.png)
 for (let i = 11001; i <= 11066; i++) {
     resources.push({ name: `images/image_3DR/fig${i}.png`, path: `./resources/images/image_3DR/fig${i}.png` });
 }
 
-// MX Images (.jpg - Fixing CSV mismatch automatically)
 const mx_images = [12043, 12044, 12045, 12046, 12047, 12048, 12050, 12053, 12054, 12055, 12056];
 for (let id of mx_images) {
     resources.push({ name: `images/image_MX/fig${id}.png`, path: `./resources/images/image_MX/fig${id}.jpg` });
@@ -120,10 +114,22 @@ async function experimentInit() {
 
 function trialsLoopBegin(scheduler, fileName, blockName) {
     return async function() {
+        // --- RANDOM SELECTION OF 4 TRIALS ---
+        let allConditions = TrialHandler.importConditions(psychoJS.serverManager, fileName);
+        
+        // Shuffle and pick the first 4
+        util.shuffle(allConditions);
+        let selectedConditions = allConditions.slice(0, 4);
+
         let trials = new TrialHandler({
-            psychoJS: psychoJS, nReps: 1, method: TrialHandler.Method.SEQUENTIAL,
-            extraInfo: expInfo, trialList: fileName, name: blockName
+            psychoJS: psychoJS,
+            nReps: 1,
+            method: TrialHandler.Method.SEQUENTIAL, // Sequential because we already shuffled the list
+            extraInfo: expInfo,
+            trialList: selectedConditions,
+            name: blockName
         });
+        
         psychoJS.experiment.addLoop(trials);
 
         for (const thisTrial of trials) {
@@ -142,13 +148,12 @@ function routineBegin(thisTrial) {
         routineClock.reset();
         window.mouseWasReleased = false; 
 
-        // Image Handling: Hide if "blank" or missing
         const imgName = thisTrial['image_file'];
         if (imgName && !imgName.includes('blank')) {
             mainImage.setImage(imgName);
             mainImage.setOpacity(1.0);
         } else {
-            mainImage.setOpacity(0.0); // Hide image for LN and VR
+            mainImage.setOpacity(0.0);
         }
 
         const qText = thisTrial['QUESTION'];
@@ -204,11 +209,5 @@ function routineEnd() {
 }
 
 function trialsLoopEnd() { return Scheduler.Event.NEXT; }
-
 function importConditions(s) { return async function () { psychoJS.importAttributes(s); return Scheduler.Event.NEXT; }; }
-
-async function quitPsychoJS(message, isCompleted) {
-    psychoJS.window.close();
-    psychoJS.quit({message, isCompleted});
-    return Scheduler.Event.QUIT;
-}
+async function quitPsychoJS(message, isCompleted) { psychoJS.window.close(); psychoJS.quit({message, isCompleted}); return Scheduler.Event.QUIT; }
