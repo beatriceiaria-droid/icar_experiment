@@ -14,40 +14,6 @@
     <script src="https://cdn.jsdelivr.net/npm/jquery-ui-dist@1.12.1/jquery-ui.min.js"></script>
     <script src="https://code.createjs.com/1.0.0/preloadjs.min.js"></script>
 
-    <script type="module">
-      import { core, data, util, visual, sound } from './lib/psychojs-2026.1.1.js';
-
-      const psychoJS = new core.PsychoJS({
-        debug: true
-      });
-
-      // Rendiamo tutto disponibile globalmente
-      window.psychoJS = psychoJS;
-      window.core = core;
-      window.data = data;
-      window.util = util;
-      window.visual = visual;
-      window.sound = sound;
-
-      // Definiamo le risorse forzando il percorso relativo
-      let resources = [
-        { name: 'conditions_3DR.csv', path: './resources/conditions_3DR.csv' },
-        { name: 'default.png', path: './resources/images/image_3DR/fig11001.png' }
-      ];
-
-      // Carichiamo le immagini fig11001.png...fig11066.png
-      for (let i = 11001; i <= 11066; i++) {
-        const name = `images/image_3DR/fig${i}.png`;
-        resources.push({ name: name, path: `./resources/${name}` });
-      }
-
-      psychoJS.start({
-        expName: 'tentativeonline',
-        expInfo: { 'participant': '' },
-        resources: resources
-      });
-    </script>
-
     <script src="./tentativeonline.js" type="module"></script>
   </body>
 </html>
