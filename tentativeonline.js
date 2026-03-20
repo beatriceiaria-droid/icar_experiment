@@ -1,3 +1,7 @@
+/************************ * Tentativeonline - Full Experiment
+ * Sequence: LN -> VR -> 3DR -> MX
+ ************************/
+
 import { core, data, sound, util, visual, hardware } from './lib/psychojs-2026.1.1.js';
 const { PsychoJS } = core;
 const { TrialHandler } = data;
@@ -27,22 +31,41 @@ psychoJS.scheduleCondition(function() { return (psychoJS.gui.dialogComponent.but
 flowScheduler.add(updateInfo);
 flowScheduler.add(experimentInit);
 
-const ROT_trialsLoopScheduler = new Scheduler(psychoJS);
-flowScheduler.add(ROT_trialsLoopBegin(ROT_trialsLoopScheduler));
-flowScheduler.add(ROT_trialsLoopScheduler);
-flowScheduler.add(ROT_trialsLoopEnd);
+// --- SEQUENZA DEI BLOCCHI (LN -> VR -> 3DR -> MX) ---
+const blocks = [
+    { name: 'LN', file: 'conditions_LN.csv' },
+    { name: 'VR', file: 'conditions_VR.csv' },
+    { name: '3DR', file: 'conditions_3DR.csv' },
+    { name: 'MX', file: 'conditions_MX.csv' }
+];
+
+for (const block of blocks) {
+    const loopScheduler = new Scheduler(psychoJS);
+    flowScheduler.add(trialsLoopBegin(loopScheduler, block.file, block.name));
+    flowScheduler.add(loopScheduler);
+    flowScheduler.add(trialsLoopEnd);
+}
 
 flowScheduler.add(quitPsychoJS, 'Experiment Completed.', true);
 dialogCancelScheduler.add(quitPsychoJS, 'Session Cancelled.', false);
 
+// --- CARICAMENTO RISORSE ---
 let resources = [
-    { name: 'conditions_3DR.csv', path: './resources/conditions_3DR.csv' }
+    { name: 'conditions_LN.csv', path: './resources/conditions_LN.csv' },
+    { name: 'conditions_VR.csv', path: './resources/conditions_VR.csv' },
+    { name: 'conditions_3DR.csv', path: './resources/conditions_3DR.csv' },
+    { name: 'conditions_MX.csv', path: './resources/conditions_MX.csv' }
 ];
 
+// 3DR Images (.png)
 for (let i = 11001; i <= 11066; i++) {
-    const csvName = `images/image_3DR/fig${i}.png`;
-    const actualPath = `./resources/images/image_3DR/fig${i}.png`;
-    resources.push({ name: csvName, path: actualPath });
+    resources.push({ name: `images/image_3DR/fig${i}.png`, path: `./resources/images/image_3DR/fig${i}.png` });
+}
+
+// MX Images (.jpg - Fixing CSV mismatch automatically)
+const mx_images = [12043, 12044, 12045, 12046, 12047, 12048, 12050, 12053, 12054, 12055, 12056];
+for (let id of mx_images) {
+    resources.push({ name: `images/image_MX/fig${id}.png`, path: `./resources/images/image_MX/fig${id}.jpg` });
 }
 
 psychoJS.start({
@@ -57,48 +80,49 @@ async function updateInfo() {
     return Scheduler.Event.NEXT;
 }
 
-var routine_3DR_trialClock, ROT_image, ROT_Q, mouse_2;
-var rot_opts = [];
-var rot_pols = [];
+var routineClock, mainImage, mainQ, mouse;
+var opt_texts = [];
+var opt_boxes = [];
 
 async function experimentInit() {
-    routine_3DR_trialClock = new util.Clock();
+    routineClock = new util.Clock();
 
-    ROT_image = new visual.ImageStim({
-        win: psychoJS.window, name: 'ROT_image', image: undefined,
+    mainImage = new visual.ImageStim({
+        win: psychoJS.window, name: 'mainImage', image: undefined,
         pos: [0, 0.25], size: [0.8, 0.4]
     });
 
-    ROT_Q = new visual.TextStim({
-        win: psychoJS.window, name: 'ROT_Q', text: '',
-        font: 'Arial Unicode MS', pos: [-0.35, 0.35], height: 0.04, color: new util.Color('white')
+    mainQ = new visual.TextStim({
+        win: psychoJS.window, name: 'mainQ', text: '',
+        font: 'Arial Unicode MS', pos: [-0.35, 0.35], height: 0.04, color: new util.Color('white'),
+        wrapWidth: 0.8
     });
 
     const x_positions = [-0.45, -0.15, 0.15, 0.45, -0.45, -0.15, 0.15, 0.45];
     const y_positions = [-0.22, -0.22, -0.22, -0.22, -0.37, -0.37, -0.37, -0.37];
 
     for (let i = 0; i < 8; i++) {
-        rot_pols[i] = new visual.Rect({
-            win: psychoJS.window, name: `rot_pol_${i+1}`,
+        opt_boxes[i] = new visual.Rect({
+            win: psychoJS.window, name: `box_${i+1}`,
             width: 0.25, height: 0.1, pos: [x_positions[i], y_positions[i]],
             lineColor: new util.Color('white'), fillColor: new util.Color('white')
         });
-        rot_opts[i] = new visual.TextStim({
-            win: psychoJS.window, name: `ROT_OPT_${i+1}`,
+        opt_texts[i] = new visual.TextStim({
+            win: psychoJS.window, name: `text_${i+1}`,
             text: '', font: 'Arial Unicode MS', pos: [x_positions[i], y_positions[i]],
             height: 0.03, color: new util.Color('black')
         });
     }
 
-    mouse_2 = new core.Mouse({ win: psychoJS.window });
+    mouse = new core.Mouse({ win: psychoJS.window });
     return Scheduler.Event.NEXT;
 }
 
-function ROT_trialsLoopBegin(scheduler, snapshot) {
+function trialsLoopBegin(scheduler, fileName, blockName) {
     return async function() {
         let trials = new TrialHandler({
-            psychoJS: psychoJS, nReps: 1, method: TrialHandler.Method.RANDOM,
-            extraInfo: expInfo, trialList: 'conditions_3DR.csv', name: 'ROT_trials'
+            psychoJS: psychoJS, nReps: 1, method: TrialHandler.Method.SEQUENTIAL,
+            extraInfo: expInfo, trialList: fileName, name: blockName
         });
         psychoJS.experiment.addLoop(trials);
 
@@ -115,20 +139,24 @@ function ROT_trialsLoopBegin(scheduler, snapshot) {
 
 function routineBegin(thisTrial) {
     return async function () {
-        routine_3DR_trialClock.reset();
-        
-        // REGOLE DI SICUREZZA MOUSE
+        routineClock.reset();
         window.mouseWasReleased = false; 
 
+        // Image Handling: Hide if "blank" or missing
         const imgName = thisTrial['image_file'];
-        if (imgName) ROT_image.setImage(imgName);
+        if (imgName && !imgName.includes('blank')) {
+            mainImage.setImage(imgName);
+            mainImage.setOpacity(1.0);
+        } else {
+            mainImage.setOpacity(0.0); // Hide image for LN and VR
+        }
 
         const qText = thisTrial['QUESTION'];
-        ROT_Q.setText(qText !== undefined && qText !== null ? qText.toString() : "");
+        mainQ.setText(qText !== undefined && qText !== null ? qText.toString().replace(/\\n/g, '\n') : "");
 
         for (let i = 1; i <= 8; i++) {
             let val = thisTrial[`choice${i}`];
-            rot_opts[i-1].setText(val !== undefined && val !== null ? val.toString() : "");
+            opt_texts[i-1].setText(val !== undefined && val !== null ? val.toString() : "");
         }
 
         return Scheduler.Event.NEXT;
@@ -137,36 +165,25 @@ function routineBegin(thisTrial) {
 
 function routineFrame() {
     return async function () {
-        ROT_image.setAutoDraw(true);
-        ROT_Q.setAutoDraw(true);
+        mainImage.setAutoDraw(true);
+        mainQ.setAutoDraw(true);
         for (let i = 0; i < 8; i++) {
-            rot_pols[i].setAutoDraw(true);
-            rot_opts[i].setAutoDraw(true);
+            opt_boxes[i].setAutoDraw(true);
+            opt_texts[i].setAutoDraw(true);
         }
 
-        const pressed = mouse_2.getPressed();
-        
-        // CONTROLLO 1: L'utente ha alzato il dito dal mouse?
-        if (pressed[0] === 0) {
-            window.mouseWasReleased = true;
-        }
+        const pressed = mouse.getPressed();
+        if (pressed[0] === 0) window.mouseWasReleased = true;
 
-        // CONTROLLO 2: L'utente ha cliccato di nuovo E aveva rilasciato il tasto?
         if (pressed[0] === 1 && window.mouseWasReleased) {
-            
-            // CONTROLLO 3: Ha cliccato dentro uno degli 8 rettangoli?
             let clickedInsideBox = false;
             for (let i = 0; i < 8; i++) {
-                if (rot_pols[i].contains(mouse_2)) {
+                if (opt_boxes[i].contains(mouse)) {
                     clickedInsideBox = true;
                     break;
                 }
             }
-            
-            // Se ha cliccato il box, passa alla domanda successiva
-            if (clickedInsideBox) {
-                return Scheduler.Event.NEXT;
-            }
+            if (clickedInsideBox) return Scheduler.Event.NEXT;
         }
 
         return Scheduler.Event.FLIP_REPEAT;
@@ -175,25 +192,20 @@ function routineFrame() {
 
 function routineEnd() {
     return async function () {
-        ROT_image.setAutoDraw(false);
-        ROT_Q.setAutoDraw(false);
+        mainImage.setAutoDraw(false);
+        mainQ.setAutoDraw(false);
         for (let i = 0; i < 8; i++) {
-            rot_pols[i].setAutoDraw(false);
-            rot_opts[i].setAutoDraw(false);
+            opt_boxes[i].setAutoDraw(false);
+            opt_texts[i].setAutoDraw(false);
         }
-        mouse_2.clickReset();
+        mouse.clickReset();
         return Scheduler.Event.NEXT;
     }
 }
 
-function ROT_trialsLoopEnd() { return Scheduler.Event.NEXT; }
+function trialsLoopEnd() { return Scheduler.Event.NEXT; }
 
-function importConditions(s) {
-    return async function () {
-        psychoJS.importAttributes(s);
-        return Scheduler.Event.NEXT;
-    };
-}
+function importConditions(s) { return async function () { psychoJS.importAttributes(s); return Scheduler.Event.NEXT; }; }
 
 async function quitPsychoJS(message, isCompleted) {
     psychoJS.window.close();
