@@ -21,6 +21,7 @@
         debug: true
       });
 
+      // Rendiamo tutto disponibile globalmente
       window.psychoJS = psychoJS;
       window.core = core;
       window.data = data;
@@ -28,18 +29,16 @@
       window.visual = visual;
       window.sound = sound;
 
-      // Definiamo le risorse
+      // Definiamo le risorse forzando il percorso relativo
       let resources = [
         { name: 'conditions_3DR.csv', path: './resources/conditions_3DR.csv' },
-        // Fix per l'errore default.png: usiamo la prima immagine come rimpiazzo
         { name: 'default.png', path: './resources/images/image_3DR/fig11001.png' }
       ];
 
-      // AGGIUNTA AUTOMATICA IMMAGINI:
-      // Questo ciclo aggiunge tutte le immagini fig11001.png...fig11066.png alla memoria
+      // Carichiamo le immagini fig11001.png...fig11066.png
       for (let i = 11001; i <= 11066; i++) {
-        const resPath = `images/image_3DR/fig${i}.png`;
-        resources.push({ name: resPath, path: `./resources/${resPath}` });
+        const name = `images/image_3DR/fig${i}.png`;
+        resources.push({ name: name, path: `./resources/${name}` });
       }
 
       psychoJS.start({
