@@ -1,3 +1,6 @@
+/************************ * Tentativeonline *
+ ************************/
+
 import { core, data, sound, util, visual, hardware } from './lib/psychojs-2026.1.1.js';
 const { PsychoJS } = core;
 const { TrialHandler } = data;
@@ -36,14 +39,15 @@ flowScheduler.add(ROT_trialsLoopEnd);
 flowScheduler.add(quitPsychoJS, 'Experiment Completed.', true);
 dialogCancelScheduler.add(quitPsychoJS, 'Session Cancelled.', false);
 
-// Load resources directly from the resources folder
+// Load resources using the exact nested folder structure
 let resources = [
     { name: 'conditions_3DR.csv', path: './resources/conditions_3DR.csv' }
 ];
 
+// Loop to push all 66 images into the resources array with the correct path
 for (let i = 11001; i <= 11066; i++) {
     const csvName = `images/image_3DR/fig${i}.png`;
-    const actualPath = `./resources/fig${i}.png`;
+    const actualPath = `./resources/images/image_3DR/fig${i}.png`;
     resources.push({ name: csvName, path: actualPath });
 }
 
@@ -80,6 +84,7 @@ async function experimentInit() {
         font: 'Arial Unicode MS', pos: [-0.35, 0.35], height: 0.04, color: new util.Color('white')
     });
 
+    // Box coordinates for the 8 choices
     const x_positions = [-0.45, -0.15, 0.15, 0.45, -0.45, -0.15, 0.15, 0.45];
     const y_positions = [-0.22, -0.22, -0.22, -0.22, -0.37, -0.37, -0.37, -0.37];
 
@@ -133,7 +138,7 @@ function routineBegin(snapshot) {
         }
 
         const qText = snapshot.getValue('QUESTION');
-        ROT_Q.setText(qText ? qText : "Question missing from CSV");
+        ROT_Q.setText(qText ? qText : "");
 
         for (let i = 1; i <= 8; i++) {
             let val = snapshot.getValue(`choice${i}`);
@@ -153,6 +158,7 @@ function routineFrame() {
             rot_opts[i].setAutoDraw(true);
         }
 
+        // Proceed to next trial on mouse click
         const pressed = mouse_2.getPressed();
         if (pressed[0] === 1 || pressed[0] === true) {
             return Scheduler.Event.NEXT;
