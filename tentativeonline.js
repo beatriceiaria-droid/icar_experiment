@@ -1,3 +1,8 @@
+/************************ * Tentativeonline - Full Professional Script
+ * 4 Blocks: LN -> VR -> 3DR -> MX
+ * Sampling: 4 random trials per block (from 102 total items)
+ ************************/
+
 import { core, data, sound, util, visual, hardware } from './lib/psychojs-2026.1.1.js';
 const { PsychoJS } = core;
 const { TrialHandler } = data;
@@ -27,7 +32,7 @@ psychoJS.scheduleCondition(function() { return (psychoJS.gui.dialogComponent.but
 flowScheduler.add(updateInfo);
 flowScheduler.add(experimentInit);
 
-// --- SEQUENCE: LN -> VR -> 3DR -> MX ---
+// --- BLOCK SEQUENCE DEFINITION ---
 const blocks = [
     { name: 'LN', file: 'conditions_LN.csv' },
     { name: 'VR', file: 'conditions_VR.csv' },
@@ -42,10 +47,10 @@ for (const block of blocks) {
     flowScheduler.add(trialsLoopEnd);
 }
 
-flowScheduler.add(quitPsychoJS, 'Experiment Completed.', true);
+flowScheduler.add(quitPsychoJS, 'Experiment Completed. Thank you!', true);
 dialogCancelScheduler.add(quitPsychoJS, 'Session Cancelled.', false);
 
-// --- RESOURCES ---
+// --- INITIAL RESOURCE LOADING (CSVs) ---
 let resources = [
     { name: 'conditions_LN.csv', path: './resources/conditions_LN.csv' },
     { name: 'conditions_VR.csv', path: './resources/conditions_VR.csv' },
@@ -53,19 +58,26 @@ let resources = [
     { name: 'conditions_MX.csv', path: './resources/conditions_MX.csv' }
 ];
 
-for (let i = 11001; i <= 11066; i++) {
-    resources.push({ name: `images/image_3DR/fig${i}.png`, path: `./resources/images/image_3DR/fig${i}.png` });
-}
-
-const mx_images = [12043, 12044, 12045, 12046, 12047, 12048, 12050, 12053, 12054, 12055, 12056];
-for (let id of mx_images) {
-    resources.push({ name: `images/image_MX/fig${id}.png`, path: `./resources/images/image_MX/fig${id}.jpg` });
-}
-
+// Start PsychoJS and dynamically download images found in CSVs
 psychoJS.start({
     expName: expName,
     expInfo: expInfo,
-    resources: resources
+    resources: resources,
+    prepareResources: async () => {
+        for (const block of blocks) {
+            const conditions = TrialHandler.importConditions(psychoJS.serverManager, block.file);
+            for (const cond of conditions) {
+                const img = cond['image_file'];
+                if (img && img !== 'blank.png' && img !== '') {
+                    // Path correction: MX images are .jpg on GitHub, but .png in some CSVs
+                    let actualPath = `./resources/${img}`;
+                    if (block.name === 'MX') actualPath = actualPath.replace('.png', '.jpg');
+                    
+                    psychoJS.serverManager.downloadResource({ name: img, path: actualPath });
+                }
+            }
+        }
+    }
 });
 
 async function updateInfo() {
@@ -114,20 +126,16 @@ async function experimentInit() {
 
 function trialsLoopBegin(scheduler, fileName, blockName) {
     return async function() {
-        // --- RANDOM SELECTION OF 4 TRIALS ---
+        // Import all items from CSV
         let allConditions = TrialHandler.importConditions(psychoJS.serverManager, fileName);
         
-        // Shuffle and pick the first 4
+        // Randomize and select exactly 4 items
         util.shuffle(allConditions);
         let selectedConditions = allConditions.slice(0, 4);
 
         let trials = new TrialHandler({
-            psychoJS: psychoJS,
-            nReps: 1,
-            method: TrialHandler.Method.SEQUENTIAL, // Sequential because we already shuffled the list
-            extraInfo: expInfo,
-            trialList: selectedConditions,
-            name: blockName
+            psychoJS: psychoJS, nReps: 1, method: TrialHandler.Method.SEQUENTIAL,
+            extraInfo: expInfo, trialList: selectedConditions, name: blockName
         });
         
         psychoJS.experiment.addLoop(trials);
