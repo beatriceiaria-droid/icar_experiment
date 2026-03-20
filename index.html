@@ -4,20 +4,36 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
     <title>tentativeonline [PsychoPy]</title>
-    <!-- styles -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jquery-ui-dist@1.12.1/jquery-ui.min.css">
     <link rel="stylesheet" href="./lib/psychojs-2026.1.1.css">
   </head>
   <body>
     <div id="root"></div>
-    <!-- external libraries -->
+
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jquery-ui-dist@1.12.1/jquery-ui.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/preloadjs@1.0.1/lib/preloadjs.min.js"></script>
-    <!-- experiment -->
+
+    <script type="module">
+      import { PsychoJS } from './lib/psychojs-2026.1.1.js';
+      import * as util from './lib/psychojs-2026.1.1.js';
+
+      const psychoJS = new PsychoJS({
+        debug: true
+      });
+
+      // Qui diciamo a PsychoJS di caricare i tuoi file CSV
+      psychoJS.start({
+        expName: 'tentativeonline',
+        expInfo: { 'participant': '' },
+        resources: [
+          { name: 'conditions_3DR.csv', path: './resources/conditions_3DR.csv' },
+          { name: 'conditions_LN.csv', path: './resources/conditions_LN.csv' },
+          { name: 'conditions_MX.csv', path: './resources/conditions_MX.csv' },
+          { name: 'conditions_VR.csv', path: './resources/conditions_VR.csv' }
+        ]
+      });
+    </script>
+
     <script src="./tentativeonline.js" type="module"></script>
-    <!-- legacy browsers -->
-    <script src="./lib/psychojs-2026.1.1.iife.js" nomodule></script>
-    <script src="./tentativeonline-legacy-browsers.js" nomodule></script>
   </body>
 </html>
