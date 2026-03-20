@@ -12,8 +12,28 @@
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jquery-ui-dist@1.12.1/jquery-ui.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/preloadjs@1.0.1/lib/preloadjs.min.js"></script>
-    <script src="./tentativeonline.js" type="module"></script>
-    <script src="./lib/psychojs-2026.1.1.iife.js" nomodule></script>
-    <script src="./tentativeonline-legacy-browsers.js" nomodule></script>
+    <script>
+      // Intercetta il risultato del file iife e lo espone globalmente
+      const _iife_orig = Function.prototype.call;
+      Function.prototype.call = function(ctx, ...args) {
+        const result = _iife_orig.apply(this, [ctx, ...args]);
+        if (result && result.core && result.util) {
+          Object.assign(window, result);
+          window.PsychoJS = result.core.PsychoJS;
+          window.util = result.util;
+          window.core = result.core;
+          window.data = result.data;
+          window.sound = result.sound;
+          window.visual = result.visual;
+          window.hardware = result.hardware;
+        }
+        return result;
+      };
+    </script>
+    <script src="./lib/psychojs-2026.1.1.iife.js"></script>
+    <script>
+      Function.prototype.call = _iife_orig;
+    </script>
+    <script src="./tentativeonline-legacy-browsers.js"></script>
   </body>
 </html>
