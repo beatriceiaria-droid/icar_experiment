@@ -1,5 +1,6 @@
-/************************ * Tentativeonline - FINAL DATA FIX
- * Integration: DataPipe (ID: lGJG7547rPOO)
+/************************ * Tentativeonline - STABLE DATA VERSION
+ * DataPipe ID: lGJG7547rPOO
+ * OSF: https://osf.io/pfxv4
  ************************/
 
 import { core, data, sound, util, visual, hardware } from './lib/psychojs-2026.1.1.js';
@@ -155,15 +156,35 @@ function routineEnd() {
 
 async function quitPsychoJS() {
     const results = psychoJS.experiment.save({attributes: expInfo});
+    
+    // BACKUP: Scarica comunque il file localmente
+    psychoJS.experiment.save();
+
+    // INVIO A DATAPIPE
     try {
         await fetch("https://pipe.jspsych.org/api/v1/data", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ experimentID: DATAPIPE_ID, filename: `${psychoJS.experiment.dataFileName}.csv`, data: results })
+            headers: { 
+                "Content-Type": "application/json",
+                "Accept": "*/*" 
+            },
+            mode: 'cors', // Forza la modalità CORS
+            body: JSON.stringify({ 
+                experimentID: DATAPIPE_ID, 
+                filename: `${psychoJS.experiment.dataFileName}.csv`, 
+                data: results 
+            })
         });
-    } catch (e) { console.error("Upload failed", e); }
-    psychoJS.window.close();
-    psychoJS.quit();
+    } catch (e) { 
+        console.error("DataPipe Upload failed", e);
+    }
+
+    // Attendi un istante per l'invio e poi chiudi
+    setTimeout(() => {
+        psychoJS.window.close();
+        psychoJS.quit();
+    }, 2000);
+
     return Scheduler.Event.QUIT;
 }
 
