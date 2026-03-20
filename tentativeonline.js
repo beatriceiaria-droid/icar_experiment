@@ -130,19 +130,19 @@ function routineBegin(snapshot) {
     return async function () {
         routine_3DR_trialClock.reset();
 
-        const imgName = snapshot.getValue('image_file');
-        console.log("DEBUG: Loading trial image -> ", imgName);
-
+        // FIX: Replaced .getValue() with bracket notation []
+        const imgName = snapshot['image_file'];
+        
         if (imgName) {
             ROT_image.setImage(imgName);
         }
 
-        const qText = snapshot.getValue('QUESTION');
-        ROT_Q.setText(qText ? qText : "");
+        const qText = snapshot['QUESTION'];
+        ROT_Q.setText(qText !== undefined && qText !== null ? qText.toString() : "");
 
         for (let i = 1; i <= 8; i++) {
-            let val = snapshot.getValue(`choice${i}`);
-            rot_opts[i-1].setText(val ? val.toString() : "");
+            let val = snapshot[`choice${i}`];
+            rot_opts[i-1].setText(val !== undefined && val !== null ? val.toString() : "");
         }
 
         return Scheduler.Event.NEXT;
