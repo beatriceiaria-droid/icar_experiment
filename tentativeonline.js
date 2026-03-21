@@ -1,6 +1,6 @@
-/************************ * Tentativeonline - STABLE DATA VERSION
+/************************ * Tentativeonline - RESTORED VERSION
+ * Order: LN -> VR -> 3DR -> MX
  * DataPipe ID: lGJG7547rPOO
- * OSF: https://osf.io/pfxv4
  ************************/
 
 import { core, data, sound, util, visual, hardware } from './lib/psychojs-2026.1.1.js';
@@ -12,7 +12,6 @@ let expName = 'tentativeonline';
 let expInfo = {'participant': ''};
 
 const psychoJS = new PsychoJS({ debug: true });
-
 const DATAPIPE_ID = 'lGJG7547rPOO'; 
 
 psychoJS.openWindow({
@@ -50,7 +49,7 @@ for (const block of blocks) {
 
 flowScheduler.add(quitPsychoJS);
 
-// RESOURCES
+// --- RESOURCES ---
 let resources = [
     { name: 'conditions_LN.csv', path: './resources/conditions_LN.csv' },
     { name: 'conditions_VR.csv', path: './resources/conditions_VR.csv' },
@@ -95,9 +94,9 @@ async function experimentInit() {
 
 function trialsLoopBegin(scheduler, fileName, blockName) {
     return async function() {
-        let trials = new TrialHandler({ psychoJS, nReps: 1, method: TrialHandler.Method.SEQUENTIAL, trialList: TrialHandler.importConditions(psychoJS.serverManager, fileName), name: blockName });
-        util.shuffle(trials.trialList);
-        trials.trialList = trials.trialList.slice(0, 4);
+        let allConditions = TrialHandler.importConditions(psychoJS.serverManager, fileName);
+        util.shuffle(allConditions);
+        let trials = new TrialHandler({ psychoJS, nReps: 1, method: TrialHandler.Method.SEQUENTIAL, trialList: allConditions.slice(0, 4), name: blockName });
         psychoJS.experiment.addLoop(trials);
         for (const thisTrial of trials) {
             scheduler.add(importConditions(trials.getSnapshot()));
@@ -116,8 +115,21 @@ function routineBegin(thisTrial, blockName) {
         currentQuestionIdx++;
         progressBar.setWidth((currentQuestionIdx / totalQuestions) * 0.8);
         progressBar.setPos([-0.4 + (progressBar.getWidth()/2), -0.48]);
-        const img = thisTrial['image_file'];
-        if (img && !img.includes('blank')) { mainImage.setImage(img); mainImage.setOpacity(1.0); } else { mainImage.setOpacity(0.0); }
+        
+        // --- SICUREZZA: Controlliamo se image_file esiste ---
+        if (thisTrial && 'image_file' in thisTrial) {
+            const img = thisTrial['image_file'];
+            if (img && !img.includes('blank')) { 
+                mainImage.setImage(img); 
+                mainImage.setOpacity(1.0); 
+            } else { 
+                mainImage.setOpacity(0.0); 
+            }
+        } else {
+            mainImage.setOpacity(0.0);
+            console.log("Colonna image_file non trovata in questo blocco");
+        }
+
         mainQ.setText(thisTrial['QUESTION'] ? thisTrial['QUESTION'].toString().replace(/\\n/g, '\n') : "");
         for (let i = 1; i <= 8; i++) {
             opt_texts[i-1].setText(thisTrial[`choice${i}`] || "");
@@ -156,35 +168,15 @@ function routineEnd() {
 
 async function quitPsychoJS() {
     const results = psychoJS.experiment.save({attributes: expInfo});
-    
-    // BACKUP: Scarica comunque il file localmente
-    psychoJS.experiment.save();
-
-    // INVIO A DATAPIPE
+    psychoJS.experiment.save(); 
     try {
         await fetch("https://pipe.jspsych.org/api/v1/data", {
             method: "POST",
-            headers: { 
-                "Content-Type": "application/json",
-                "Accept": "*/*" 
-            },
-            mode: 'cors', // Forza la modalità CORS
-            body: JSON.stringify({ 
-                experimentID: DATAPIPE_ID, 
-                filename: `${psychoJS.experiment.dataFileName}.csv`, 
-                data: results 
-            })
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ experimentID: DATAPIPE_ID, filename: `${psychoJS.experiment.dataFileName}.csv`, data: results })
         });
-    } catch (e) { 
-        console.error("DataPipe Upload failed", e);
-    }
-
-    // Attendi un istante per l'invio e poi chiudi
-    setTimeout(() => {
-        psychoJS.window.close();
-        psychoJS.quit();
-    }, 2000);
-
+    } catch (e) { console.error("DataPipe failed", e); }
+    setTimeout(() => { psychoJS.window.close(); psychoJS.quit(); }, 1500);
     return Scheduler.Event.QUIT;
 }
 
