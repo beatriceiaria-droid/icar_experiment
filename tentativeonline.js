@@ -94,7 +94,7 @@ var scores = {
     TOTAL: 0,
     LN: 0,
     VR: 0,
-    3DR: 0,
+    '3DR': 0, // FIXED syntax error
     MX: 0
 };
 
@@ -131,7 +131,7 @@ function trialsLoopBegin(scheduler, fileName, blockName) {
         psychoJS.experiment.addLoop(trials);
         
         for (const thisTrial of trials) {
-            // Clone the trial object to freeze its values for this exact iteration
+            // FIX: Clone the trial object to freeze its values (solves the 4-identical-questions bug)
             let currentTrial = Object.assign({}, thisTrial);
             
             scheduler.add(importConditions(trials.getSnapshot()));
@@ -215,7 +215,7 @@ function routineFrame(thisTrial, blockName) {
                     psychoJS.experiment.addData('score_TOTAL', scores.TOTAL);
                     psychoJS.experiment.addData('score_LN', scores.LN);
                     psychoJS.experiment.addData('score_VR', scores.VR);
-                    psychoJS.experiment.addData('score_3DR', scores.3DR);
+                    psychoJS.experiment.addData('score_3DR', scores['3DR']); // FIXED syntax error
                     psychoJS.experiment.addData('score_MX', scores.MX);
 
                     // Move to next trial
