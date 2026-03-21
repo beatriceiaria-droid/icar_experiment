@@ -1,7 +1,7 @@
 /********************************************************
  * Tentativeonline - GOOGLE DRIVE INVISIBLE FORM 
  * PhD Research Data Collection
- * Solves: 302 Redirects and doGet errors on Google Apps Script
+ * Solves: [object Promise] by using async/await correctly
  ********************************************************/
 
 import { core, data, sound, util, visual, hardware } from './lib/psychojs-2026.1.1.js';
@@ -202,13 +202,11 @@ function routineEnd() {
 }
 
 async function quitPsychoJS() {
-    // 1. Generate the CSV results
-    const results = psychoJS.experiment.save({attributes: expInfo});
-    
-    // 2. Backup: Local download on participant's machine
-    psychoJS.experiment.save();
+    // 1. AWAIT the CSV generation. 
+    // This waits for the text to be ready AND triggers the local download.
+    const results = await psychoJS.experiment.save({attributes: expInfo});
 
-    // 3. THE ULTIMATE BYPASS: Invisible HTML Form
+    // 2. THE ULTIMATE BYPASS: Invisible HTML Form
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzhWBcNeQgH7hqr5pjhi9ZRNXRIc6M8xgJI8cbAHLU6YM31UcMrhNxbbVy3QgCJCBDX/exec";
 
     // Create a hidden iframe so the page doesn't refresh when the form submits
@@ -230,7 +228,7 @@ async function quitPsychoJS() {
     filenameInput.value = `${psychoJS.experiment.dataFileName}.csv`;
     form.appendChild(filenameInput);
 
-    // Add the data input
+    // Add the data input (Now this contains the REAL text, not a Promise!)
     const dataInput = document.createElement('input');
     dataInput.type = 'hidden';
     dataInput.name = 'data';
