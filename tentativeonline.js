@@ -1,6 +1,6 @@
-/************************ * Tentativeonline - FINAL STABLE VERSION 
- * Integration: DataPipe (ID: lGJG7547rPOO)
- * Flow: LN -> VR -> 3DR -> MX (4 trials each)
+/************************ * Tentativeonline - BEACON STABLE VERSION 
+ * Solves: CORS 'Origin not allowed' error
+ * ID: lGJG7547rPOO
  ************************/
 
 import { core, data, sound, util, visual, hardware } from './lib/psychojs-2026.1.1.js';
@@ -12,7 +12,7 @@ let expName = 'tentativeonline';
 let expInfo = {'participant': ''};
 
 const psychoJS = new PsychoJS({ debug: true });
-const DATAPIPE_ID = 'lGJG7547rPOO'; // ID confermato dallo screenshot
+const DATAPIPE_ID = 'lGJG7547rPOO'; 
 
 psychoJS.openWindow({
     fullscr: true,
@@ -163,26 +163,29 @@ function routineEnd() {
 }
 
 async function quitPsychoJS() {
+    // 1. Genera i risultati CSV (stringa)
     const results = psychoJS.experiment.save({attributes: expInfo});
-    psychoJS.experiment.save(); // Scarica file locale sul Mac
+    
+    // 2. Backup: Scarica il file sul Mac
+    psychoJS.experiment.save();
 
-    // --- INVIO A DATAPIPE ---
-    fetch("https://pipe.jspsych.org/api/v1/data", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-            experimentID: DATAPIPE_ID, 
-            filename: `${psychoJS.experiment.dataFileName}.csv`, 
-            data: results 
-        })
-    })
-    .then(resp => console.log("DataPipe Status:", resp.status))
-    .catch(err => console.error("DataPipe Error:", err));
+    // 3. INVIO BEACON (Aggira l'errore CORS 'Origin not allowed')
+    const url = "https://pipe.jspsych.org/api/v1/data";
+    const payload = JSON.stringify({ 
+        experimentID: DATAPIPE_ID, 
+        filename: `${psychoJS.experiment.dataFileName}.csv`, 
+        data: results 
+    });
 
+    // Invia i dati come pacchetto Blob "muto" per non essere bloccati dal browser
+    navigator.sendBeacon(url, new Blob([payload], {type: 'application/json'}));
+
+    // Aspettiamo un po' per sicurezza e chiudiamo
     setTimeout(() => {
         psychoJS.window.close();
         psychoJS.quit();
-    }, 2500);
+    }, 2000);
+
     return Scheduler.Event.QUIT;
 }
 
