@@ -1,7 +1,7 @@
 /********************************************************
- * Tentativeonline - GOOGLE DRIVE DIRECT INTEGRATION 
+ * Tentativeonline - GOOGLE DRIVE INVISIBLE FORM 
  * PhD Research Data Collection
- * Solves: CORS / DataPipe issues by using Google Apps Script
+ * Solves: 302 Redirects and doGet errors on Google Apps Script
  ********************************************************/
 
 import { core, data, sound, util, visual, hardware } from './lib/psychojs-2026.1.1.js';
@@ -208,26 +208,44 @@ async function quitPsychoJS() {
     // 2. Backup: Local download on participant's machine
     psychoJS.experiment.save();
 
-    // 3. SEND TO GOOGLE DRIVE (Using the new Web App URL)
+    // 3. THE ULTIMATE BYPASS: Invisible HTML Form
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzhWBcNeQgH7hqr5pjhi9ZRNXRIc6M8xgJI8cbAHLU6YM31UcMrhNxbbVy3QgCJCBDX/exec";
 
-    // Format data as a standard web form (URLSearchParams)
-    const formData = new URLSearchParams();
-    formData.append("filename", `${psychoJS.experiment.dataFileName}.csv`);
-    formData.append("data", results);
+    // Create a hidden iframe so the page doesn't refresh when the form submits
+    const iframe = document.createElement('iframe');
+    iframe.name = 'hidden_iframe';
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
 
-    // Send the package 'blindly' (no-cors) to bypass strict browser security
-    fetch(GOOGLE_SCRIPT_URL, {
-        method: "POST",
-        mode: "no-cors",
-        body: formData
-    });
+    // Create an invisible form
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = GOOGLE_SCRIPT_URL;
+    form.target = 'hidden_iframe'; // Send the result into the hidden iframe
 
-    // Wait 2.5 seconds to ensure delivery, then close
+    // Add the filename input
+    const filenameInput = document.createElement('input');
+    filenameInput.type = 'hidden';
+    filenameInput.name = 'filename';
+    filenameInput.value = `${psychoJS.experiment.dataFileName}.csv`;
+    form.appendChild(filenameInput);
+
+    // Add the data input
+    const dataInput = document.createElement('input');
+    dataInput.type = 'hidden';
+    dataInput.name = 'data';
+    dataInput.value = results;
+    form.appendChild(dataInput);
+
+    // Attach form to body and click submit!
+    document.body.appendChild(form);
+    form.submit();
+
+    // Wait 3 seconds to ensure Google processes the form, then close
     setTimeout(() => {
         psychoJS.window.close();
         psychoJS.quit();
-    }, 2500);
+    }, 3000);
 
     return Scheduler.Event.QUIT;
 }
