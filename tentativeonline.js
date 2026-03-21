@@ -1,5 +1,5 @@
-/************************ * Tentativeonline - FINAL PROXY BYPASS 
- * Solves: 'Origin not allowed' by using a CORS Proxy
+/************************ * Tentativeonline - CORS BYPASS VERSION 
+ * Solves: 'Origin not allowed' by using text/plain format
  * ID: lGJG7547rPOO
  ************************/
 
@@ -102,91 +102,4 @@ function trialsLoopBegin(scheduler, fileName, blockName) {
             scheduler.add(importConditions(trials.getSnapshot()));
             scheduler.add(routineBegin(thisTrial, blockName));
             scheduler.add(routineFrame());
-            scheduler.add(routineEnd());
-        }
-        return Scheduler.Event.NEXT;
-    }
-}
-
-function routineBegin(thisTrial, blockName) {
-    return async function () {
-        routineClock.reset();
-        window.mouseWasReleased = false; 
-        currentQuestionIdx++;
-        progressBar.setWidth((currentQuestionIdx / totalQuestions) * 0.8);
-        progressBar.setPos([-0.4 + (progressBar.getWidth()/2), -0.48]);
-        
-        const img = thisTrial['image_file'];
-        if (img && !img.includes('blank')) { 
-            mainImage.setImage(img); 
-            mainImage.setOpacity(1.0); 
-        } else { 
-            mainImage.setOpacity(0.0); 
-        }
-
-        mainQ.setText(thisTrial['QUESTION'] ? thisTrial['QUESTION'].toString().replace(/\\n/g, '\n') : "");
-        for (let i = 1; i <= 8; i++) {
-            opt_texts[i-1].setText(thisTrial[`choice${i}`] || "");
-            opt_boxes[i-1].setFillColor(new util.Color('white'));
-        }
-        psychoJS.experiment.addData('block', blockName);
-        return Scheduler.Event.NEXT;
-    }
-}
-
-function routineFrame() {
-    return async function () {
-        mainImage.setAutoDraw(true); mainQ.setAutoDraw(true); progressBox.setAutoDraw(true); progressBar.setAutoDraw(true);
-        opt_boxes.forEach(b => b.setAutoDraw(true)); opt_texts.forEach(t => t.setAutoDraw(true));
-        if (mouse.getPressed()[0] === 0) window.mouseWasReleased = true;
-        if (mouse.getPressed()[0] === 1 && window.mouseWasReleased) {
-            for (let i = 0; i < 8; i++) {
-                if (opt_boxes[i].contains(mouse)) {
-                    psychoJS.experiment.addData('response', i + 1);
-                    psychoJS.experiment.addData('rt', routineClock.getTime());
-                    psychoJS.experiment.nextEntry();
-                    return Scheduler.Event.NEXT;
-                }
-            }
-        }
-        return Scheduler.Event.FLIP_REPEAT;
-    };
-}
-
-function routineEnd() {
-    return async function () {
-        [mainImage, mainQ, progressBox, progressBar, ...opt_boxes, ...opt_texts].forEach(s => s.setAutoDraw(false));
-        return Scheduler.Event.NEXT;
-    }
-}
-
-async function quitPsychoJS() {
-    const results = psychoJS.experiment.save({attributes: expInfo});
-    psychoJS.experiment.save(); // Backup locale
-
-    // --- INVIO TRAMITE PROXY (Per saltare il muro CORS) ---
-    const targetUrl = "https://pipe.jspsych.org/api/v1/data";
-    const proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(targetUrl);
-
-    fetch(proxyUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-            experimentID: DATAPIPE_ID, 
-            filename: `${psychoJS.experiment.dataFileName}.csv`, 
-            data: results 
-        })
-    })
-    .then(response => console.log("Invio riuscito (Status):", response.status))
-    .catch(err => console.error("Errore Proxy:", err));
-
-    setTimeout(() => {
-        psychoJS.window.close();
-        psychoJS.quit();
-    }, 3000);
-
-    return Scheduler.Event.QUIT;
-}
-
-function trialsLoopEnd() { return Scheduler.Event.NEXT; }
-function importConditions(s) { return async function () { psychoJS.importAttributes(s); return Scheduler.Event.NEXT; }; }
+            scheduler.add(routine
