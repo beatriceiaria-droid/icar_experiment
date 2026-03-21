@@ -1,3 +1,8 @@
+/************************ * Tentativeonline - FINAL STABLE VERSION 
+ * Integration: DataPipe (ID: lGJG7547rPOO)
+ * Flow: LN -> VR -> 3DR -> MX (4 trials each)
+ ************************/
+
 import { core, data, sound, util, visual, hardware } from './lib/psychojs-2026.1.1.js';
 const { PsychoJS } = core;
 const { TrialHandler } = data;
@@ -7,10 +12,7 @@ let expName = 'tentativeonline';
 let expInfo = {'participant': ''};
 
 const psychoJS = new PsychoJS({ debug: true });
-
-// --- DATAPIPE CONFIG ---
-// Assicurati che inizi con la "L" minuscola come nello screenshot
-const DATAPIPE_ID = 'lGJG7547rPOO'; 
+const DATAPIPE_ID = 'lGJG7547rPOO'; // ID confermato dallo screenshot
 
 psychoJS.openWindow({
     fullscr: true,
@@ -115,18 +117,19 @@ function routineBegin(thisTrial, blockName) {
         progressBar.setPos([-0.4 + (progressBar.getWidth()/2), -0.48]);
         
         const img = thisTrial['image_file'];
-        if (img && !img.includes('blank')) { mainImage.setImage(img); mainImage.setOpacity(1.0); } else { mainImage.setOpacity(0.0); }
+        if (img && !img.includes('blank')) { 
+            mainImage.setImage(img); 
+            mainImage.setOpacity(1.0); 
+        } else { 
+            mainImage.setOpacity(0.0); 
+        }
+
         mainQ.setText(thisTrial['QUESTION'] ? thisTrial['QUESTION'].toString().replace(/\\n/g, '\n') : "");
-        
         for (let i = 1; i <= 8; i++) {
             opt_texts[i-1].setText(thisTrial[`choice${i}`] || "");
             opt_boxes[i-1].setFillColor(new util.Color('white'));
         }
-        
-        // AGGIUNTA COLONNA PER VALIDAZIONE DATAPIPE
-        psychoJS.experiment.addData('trial_type', 'icar_question');
         psychoJS.experiment.addData('block', blockName);
-        
         return Scheduler.Event.NEXT;
     }
 }
@@ -135,7 +138,9 @@ function routineFrame() {
     return async function () {
         mainImage.setAutoDraw(true); mainQ.setAutoDraw(true); progressBox.setAutoDraw(true); progressBar.setAutoDraw(true);
         opt_boxes.forEach(b => b.setAutoDraw(true)); opt_texts.forEach(t => t.setAutoDraw(true));
+        
         if (mouse.getPressed()[0] === 0) window.mouseWasReleased = true;
+        
         if (mouse.getPressed()[0] === 1 && window.mouseWasReleased) {
             for (let i = 0; i < 8; i++) {
                 if (opt_boxes[i].contains(mouse)) {
@@ -159,24 +164,25 @@ function routineEnd() {
 
 async function quitPsychoJS() {
     const results = psychoJS.experiment.save({attributes: expInfo});
-    psychoJS.experiment.save(); 
+    psychoJS.experiment.save(); // Scarica file locale sul Mac
 
-    try {
-        await fetch("https://pipe.jspsych.org/api/v1/data", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ 
-                experimentID: DATAPIPE_ID, 
-                filename: `${psychoJS.experiment.dataFileName}.csv`, 
-                data: results 
-            })
-        });
-    } catch (e) { console.error("Upload Error", e); }
+    // --- INVIO A DATAPIPE ---
+    fetch("https://pipe.jspsych.org/api/v1/data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+            experimentID: DATAPIPE_ID, 
+            filename: `${psychoJS.experiment.dataFileName}.csv`, 
+            data: results 
+        })
+    })
+    .then(resp => console.log("DataPipe Status:", resp.status))
+    .catch(err => console.error("DataPipe Error:", err));
 
     setTimeout(() => {
         psychoJS.window.close();
         psychoJS.quit();
-    }, 2000);
+    }, 2500);
     return Scheduler.Event.QUIT;
 }
 
