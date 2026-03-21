@@ -1,4 +1,4 @@
-/************************ * Tentativeonline - FINAL CORS BYPASS 
+/************************ * Tentativeonline - FINAL PROXY BYPASS 
  * Solves: 'Origin not allowed' by using a CORS Proxy
  * ID: lGJG7547rPOO
  ************************/
@@ -164,7 +164,7 @@ async function quitPsychoJS() {
     const results = psychoJS.experiment.save({attributes: expInfo});
     psychoJS.experiment.save(); // Backup locale
 
-    // --- INVIO TRAMITE PROXY ---
+    // --- INVIO TRAMITE PROXY (Per saltare il muro CORS) ---
     const targetUrl = "https://pipe.jspsych.org/api/v1/data";
     const proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(targetUrl);
 
@@ -177,7 +177,7 @@ async function quitPsychoJS() {
             data: results 
         })
     })
-    .then(response => console.log("DataPipe status (via Proxy):", response.status))
+    .then(response => console.log("Invio riuscito (Status):", response.status))
     .catch(err => console.error("Errore Proxy:", err));
 
     setTimeout(() => {
