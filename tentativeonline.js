@@ -1,7 +1,7 @@
 /********************************************************
  * Tentativeonline - FINAL GOOGLE DRIVE VERSION + SCORING
  * PhD Research Data Collection
- * Features: Trial mutation fix, Auto-Scoring, Drive Sync
+ * Features: True Async Iterator, Clean Summary Row, Drive Sync
  ********************************************************/
 
 import { core, data, sound, util, visual, hardware } from './lib/psychojs-2026.1.1.js';
@@ -89,12 +89,12 @@ var routineClock, mainImage, mainQ, mouse, progressBar, progressBox;
 var opt_texts = [], opt_boxes = [];
 var totalQuestions = 16, currentQuestionIdx = 0;
 
-// Scoring trackers
+// Scoring trackers (Values kept in background)
 var scores = {
     TOTAL: 0,
     LN: 0,
     VR: 0,
-    '3DR': 0, // FIXED syntax error
+    '3DR': 0, 
     MX: 0
 };
 
@@ -127,18 +127,37 @@ function trialsLoopBegin(scheduler, fileName, blockName) {
         let allConditions = TrialHandler.importConditions(psychoJS.serverManager, fileName);
         util.shuffle(allConditions);
         
-        let trials = new TrialHandler({ psychoJS, nReps: 1, method: TrialHandler.Method.SEQUENTIAL, trialList: allConditions.slice(0, 4), name: blockName });
+        let trials = new TrialHandler({ 
+            psychoJS, 
+            nReps: 1, 
+            method: TrialHandler.Method.SEQUENTIAL, 
+            trialList: allConditions.slice(0, 4), 
+            name: blockName 
+        });
         psychoJS.experiment.addLoop(trials);
         
-        for (const thisTrial of trials) {
-            // FIX: Clone the trial object to freeze its values (solves the 4-identical-questions bug)
-            let currentTrial = Object.assign({}, thisTrial);
+        const trialIterator = trials[Symbol.iterator]();
+        
+        // Asynchronous iterator to prevent trial skipping
+        function nextTrial() {
+            let stepResult = trialIterator.next();
+            if (stepResult.done) {
+                return Scheduler.Event.NEXT;
+            }
+            let thisTrial = stepResult.value;
             
             scheduler.add(importConditions(trials.getSnapshot()));
-            scheduler.add(routineBegin(currentTrial, blockName));
-            scheduler.add(routineFrame(currentTrial, blockName));
+            scheduler.add(routineBegin(thisTrial, blockName));
+            scheduler.add(routineFrame(thisTrial, blockName));
             scheduler.add(routineEnd());
+            
+            // Loop back for the next question
+            scheduler.add(nextTrial); 
+            
+            return Scheduler.Event.NEXT;
         }
+        
+        scheduler.add(nextTrial);
         return Scheduler.Event.NEXT;
     }
 }
@@ -162,7 +181,7 @@ function routineBegin(thisTrial, blockName) {
             mainImage.setOpacity(0.0); 
         }
 
-        // Set question text (handling line breaks)
+        // Set question text
         mainQ.setText(thisTrial['QUESTION'] ? thisTrial['QUESTION'].toString().replace(/\\n/g, '\n') : "");
         
         // Set choices text
@@ -171,7 +190,6 @@ function routineBegin(thisTrial, blockName) {
             opt_boxes[i-1].setFillColor(new util.Color('white'));
         }
         
-        // Log the current block name
         psychoJS.experiment.addData('block', blockName);
         return Scheduler.Event.NEXT;
     }
@@ -179,7 +197,6 @@ function routineBegin(thisTrial, blockName) {
 
 function routineFrame(thisTrial, blockName) {
     return async function () {
-        // Draw all components
         mainImage.setAutoDraw(true); 
         mainQ.setAutoDraw(true); 
         progressBox.setAutoDraw(true); 
@@ -187,38 +204,28 @@ function routineFrame(thisTrial, blockName) {
         opt_boxes.forEach(b => b.setAutoDraw(true)); 
         opt_texts.forEach(t => t.setAutoDraw(true));
         
-        // Enforce a strict click mechanism (must release mouse first)
         if (mouse.getPressed()[0] === 0) window.mouseWasReleased = true;
         
-        // Check for clicks on option boxes
         if (mouse.getPressed()[0] === 1 && window.mouseWasReleased) {
             for (let i = 0; i < 8; i++) {
                 if (opt_boxes[i].contains(mouse)) {
                     
-                    // --- SCORING LOGIC ---
-                    let givenResponse = i + 1; // 1 to 8
+                    // Evaluate response
+                    let givenResponse = i + 1; 
                     let correctAnswer = parseInt(thisTrial['ANSWER']);
                     let isCorrect = (givenResponse === correctAnswer) ? 1 : 0;
                     
-                    // Update score counters
+                    // Update background score counters
                     scores.TOTAL += isCorrect;
                     if (scores[blockName] !== undefined) {
                         scores[blockName] += isCorrect;
                     }
 
-                    // Log response and time
+                    // Log basic trial data (0 or 1 for this specific question)
                     psychoJS.experiment.addData('response', givenResponse);
                     psychoJS.experiment.addData('rt', routineClock.getTime());
-                    
-                    // Log specific correctness and running scores
                     psychoJS.experiment.addData('is_correct', isCorrect);
-                    psychoJS.experiment.addData('score_TOTAL', scores.TOTAL);
-                    psychoJS.experiment.addData('score_LN', scores.LN);
-                    psychoJS.experiment.addData('score_VR', scores.VR);
-                    psychoJS.experiment.addData('score_3DR', scores['3DR']); // FIXED syntax error
-                    psychoJS.experiment.addData('score_MX', scores.MX);
 
-                    // Move to next trial
                     psychoJS.experiment.nextEntry();
                     return Scheduler.Event.NEXT;
                 }
@@ -230,53 +237,55 @@ function routineFrame(thisTrial, blockName) {
 
 function routineEnd() {
     return async function () {
-        // Hide all components at the end of the trial
         [mainImage, mainQ, progressBox, progressBar, ...opt_boxes, ...opt_texts].forEach(s => s.setAutoDraw(false));
         return Scheduler.Event.NEXT;
     }
 }
 
 async function quitPsychoJS() {
-    // 1. Trigger local download (backup)
+    // CREATE THE FINAL SUMMARY ROW
+    psychoJS.experiment.addData('block', 'FINAL_SUMMARY');
+    psychoJS.experiment.addData('score_TOTAL', `${scores.TOTAL}/16`);
+    psychoJS.experiment.addData('score_LN', `${scores.LN}/4`);
+    psychoJS.experiment.addData('score_VR', `${scores.VR}/4`);
+    psychoJS.experiment.addData('score_3DR', `${scores['3DR']}/4`);
+    psychoJS.experiment.addData('score_MX', `${scores.MX}/4`);
+    psychoJS.experiment.nextEntry(); // Save the summary row into the CSV
+
+    // 1. Trigger local download
     psychoJS.experiment.save();
 
-    // 2. EXTRACT REAL CSV TEXT DIRECTLY
+    // 2. Extract final CSV text
     const csvText = psychoJS.experiment.getResultAsCsv();
 
     // 3. SEND TO GOOGLE DRIVE
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzhWBcNeQgH7hqr5pjhi9ZRNXRIc6M8xgJI8cbAHLU6YM31UcMrhNxbbVy3QgCJCBDX/exec";
 
-    // Create a hidden iframe so the page doesn't refresh
     const iframe = document.createElement('iframe');
     iframe.name = 'hidden_iframe';
     iframe.style.display = 'none';
     document.body.appendChild(iframe);
 
-    // Create an invisible form
     const form = document.createElement('form');
     form.method = 'POST';
     form.action = GOOGLE_SCRIPT_URL;
     form.target = 'hidden_iframe'; 
 
-    // Add filename
     const filenameInput = document.createElement('input');
     filenameInput.type = 'hidden';
     filenameInput.name = 'filename';
     filenameInput.value = `${psychoJS.experiment.dataFileName}.csv`;
     form.appendChild(filenameInput);
 
-    // Add data payload
     const dataInput = document.createElement('input');
     dataInput.type = 'hidden';
     dataInput.name = 'data';
     dataInput.value = csvText;
     form.appendChild(dataInput);
 
-    // Submit form silently
     document.body.appendChild(form);
     form.submit();
 
-    // Wait before exiting
     setTimeout(() => {
         psychoJS.window.close();
         psychoJS.quit();
