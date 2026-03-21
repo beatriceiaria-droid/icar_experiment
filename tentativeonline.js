@@ -184,7 +184,7 @@ async function quitPsychoJS() {
     setTimeout(() => {
         psychoJS.window.close();
         psychoJS.quit();
-    }, 2000);
+    }, 2500);
 
     return Scheduler.Event.QUIT;
 }
