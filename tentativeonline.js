@@ -1,7 +1,7 @@
 /********************************************************
- * Tentativeonline - GOOGLE DRIVE INVISIBLE FORM 
+ * Tentativeonline - FINAL GOOGLE DRIVE VERSION
  * PhD Research Data Collection
- * Solves: [object Promise] by extracting synchronous CSV text
+ * Fixes: Trial mutation bug (Object.assign)
  ********************************************************/
 
 import { core, data, sound, util, visual, hardware } from './lib/psychojs-2026.1.1.js';
@@ -122,8 +122,12 @@ function trialsLoopBegin(scheduler, fileName, blockName) {
         psychoJS.experiment.addLoop(trials);
         
         for (const thisTrial of trials) {
+            // BUG FIX: Clone the trial object to freeze its values for this exact iteration
+            // Otherwise JavaScript keeps overwriting it and shows the 4th trial 4 times!
+            let currentTrial = Object.assign({}, thisTrial);
+            
             scheduler.add(importConditions(trials.getSnapshot()));
-            scheduler.add(routineBegin(thisTrial, blockName));
+            scheduler.add(routineBegin(currentTrial, blockName));
             scheduler.add(routineFrame());
             scheduler.add(routineEnd());
         }
@@ -205,39 +209,43 @@ async function quitPsychoJS() {
     // 1. Trigger local download (backup)
     psychoJS.experiment.save();
 
-    // 2. EXTRACT REAL CSV TEXT DIRECTLY (No empty Promises!)
+    // 2. EXTRACT REAL CSV TEXT DIRECTLY
     const csvText = psychoJS.experiment.getResultAsCsv();
 
     // 3. SEND TO GOOGLE DRIVE
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzhWBcNeQgH7hqr5pjhi9ZRNXRIc6M8xgJI8cbAHLU6YM31UcMrhNxbbVy3QgCJCBDX/exec";
 
+    // Create a hidden iframe so the page doesn't refresh
     const iframe = document.createElement('iframe');
     iframe.name = 'hidden_iframe';
     iframe.style.display = 'none';
     document.body.appendChild(iframe);
 
+    // Create an invisible form
     const form = document.createElement('form');
     form.method = 'POST';
     form.action = GOOGLE_SCRIPT_URL;
     form.target = 'hidden_iframe'; 
 
+    // Add filename
     const filenameInput = document.createElement('input');
     filenameInput.type = 'hidden';
     filenameInput.name = 'filename';
     filenameInput.value = `${psychoJS.experiment.dataFileName}.csv`;
     form.appendChild(filenameInput);
 
-    // Insert the real text into the payload
+    // Add data payload
     const dataInput = document.createElement('input');
     dataInput.type = 'hidden';
     dataInput.name = 'data';
     dataInput.value = csvText;
     form.appendChild(dataInput);
 
+    // Submit form silently
     document.body.appendChild(form);
     form.submit();
 
-    // Wait 3 seconds to ensure Google processes the form, then close
+    // Wait before exiting
     setTimeout(() => {
         psychoJS.window.close();
         psychoJS.quit();
