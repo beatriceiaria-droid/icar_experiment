@@ -169,7 +169,7 @@ async function quitPsychoJS() {
     // 2. Backup: Scarica il file sul Mac
     psychoJS.experiment.save();
 
-    // 3. INVIO BEACON (Aggira l'errore CORS 'Origin not allowed')
+    // 3. INVIO BEACON (Metodo più robusto contro errori CORS)
     const url = "https://pipe.jspsych.org/api/v1/data";
     const payload = JSON.stringify({ 
         experimentID: DATAPIPE_ID, 
@@ -177,10 +177,10 @@ async function quitPsychoJS() {
         data: results 
     });
 
-    // Invia i dati come pacchetto Blob "muto" per non essere bloccati dal browser
+    // Invia i dati come pacchetto Blob per aggirare i controlli 'Origin'
     navigator.sendBeacon(url, new Blob([payload], {type: 'application/json'}));
 
-    // Aspettiamo un po' per sicurezza e chiudiamo
+    // Aspettiamo un po' e chiudiamo
     setTimeout(() => {
         psychoJS.window.close();
         psychoJS.quit();
