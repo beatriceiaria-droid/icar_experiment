@@ -1,7 +1,7 @@
 /********************************************************
- * Tentativeonline - FINAL GOOGLE DRIVE VERSION
+ * Tentativeonline - FINAL GOOGLE DRIVE VERSION + SCORING
  * PhD Research Data Collection
- * Fixes: Trial mutation bug (Object.assign)
+ * Features: Trial mutation fix, Auto-Scoring, Drive Sync
  ********************************************************/
 
 import { core, data, sound, util, visual, hardware } from './lib/psychojs-2026.1.1.js';
@@ -84,10 +84,19 @@ async function updateInfo() {
     return Scheduler.Event.NEXT;
 }
 
-// --- VISUAL COMPONENTS SETUP ---
+// --- VISUAL COMPONENTS & SCORING SETUP ---
 var routineClock, mainImage, mainQ, mouse, progressBar, progressBox;
 var opt_texts = [], opt_boxes = [];
 var totalQuestions = 16, currentQuestionIdx = 0;
+
+// Scoring trackers
+var scores = {
+    TOTAL: 0,
+    LN: 0,
+    VR: 0,
+    3DR: 0,
+    MX: 0
+};
 
 async function experimentInit() {
     routineClock = new util.Clock();
@@ -122,13 +131,12 @@ function trialsLoopBegin(scheduler, fileName, blockName) {
         psychoJS.experiment.addLoop(trials);
         
         for (const thisTrial of trials) {
-            // BUG FIX: Clone the trial object to freeze its values for this exact iteration
-            // Otherwise JavaScript keeps overwriting it and shows the 4th trial 4 times!
+            // Clone the trial object to freeze its values for this exact iteration
             let currentTrial = Object.assign({}, thisTrial);
             
             scheduler.add(importConditions(trials.getSnapshot()));
             scheduler.add(routineBegin(currentTrial, blockName));
-            scheduler.add(routineFrame());
+            scheduler.add(routineFrame(currentTrial, blockName));
             scheduler.add(routineEnd());
         }
         return Scheduler.Event.NEXT;
@@ -169,7 +177,7 @@ function routineBegin(thisTrial, blockName) {
     }
 }
 
-function routineFrame() {
+function routineFrame(thisTrial, blockName) {
     return async function () {
         // Draw all components
         mainImage.setAutoDraw(true); 
@@ -186,8 +194,31 @@ function routineFrame() {
         if (mouse.getPressed()[0] === 1 && window.mouseWasReleased) {
             for (let i = 0; i < 8; i++) {
                 if (opt_boxes[i].contains(mouse)) {
-                    psychoJS.experiment.addData('response', i + 1);
+                    
+                    // --- SCORING LOGIC ---
+                    let givenResponse = i + 1; // 1 to 8
+                    let correctAnswer = parseInt(thisTrial['ANSWER']);
+                    let isCorrect = (givenResponse === correctAnswer) ? 1 : 0;
+                    
+                    // Update score counters
+                    scores.TOTAL += isCorrect;
+                    if (scores[blockName] !== undefined) {
+                        scores[blockName] += isCorrect;
+                    }
+
+                    // Log response and time
+                    psychoJS.experiment.addData('response', givenResponse);
                     psychoJS.experiment.addData('rt', routineClock.getTime());
+                    
+                    // Log specific correctness and running scores
+                    psychoJS.experiment.addData('is_correct', isCorrect);
+                    psychoJS.experiment.addData('score_TOTAL', scores.TOTAL);
+                    psychoJS.experiment.addData('score_LN', scores.LN);
+                    psychoJS.experiment.addData('score_VR', scores.VR);
+                    psychoJS.experiment.addData('score_3DR', scores.3DR);
+                    psychoJS.experiment.addData('score_MX', scores.MX);
+
+                    // Move to next trial
                     psychoJS.experiment.nextEntry();
                     return Scheduler.Event.NEXT;
                 }
