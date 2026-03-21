@@ -1,5 +1,5 @@
-/************************ * Tentativeonline - FORM-DATA BYPASS 
- * Solves: CORS 'Origin not allowed' by masking as Form Data
+/************************ * Tentativeonline - NO-CORS BYPASS 
+ * Solves: 'Origin not allowed' by forcing an opaque request
  * ID: lGJG7547rPOO
  ************************/
 
@@ -155,19 +155,20 @@ function routineEnd() {
 
 async function quitPsychoJS() {
     const results = psychoJS.experiment.save({attributes: expInfo});
-    psychoJS.experiment.save(); // Scarica comunque il file sul Mac
+    psychoJS.experiment.save(); // Backup locale download
 
-    // --- INVIO "CAMUFFATO" COME FORM-DATA ---
-    // Questo metodo è meno soggetto ai blocchi Origin Not Allowed
-    const formData = new FormData();
-    formData.append('experimentID', DATAPIPE_ID);
-    formData.append('filename', `${psychoJS.experiment.dataFileName}.csv`);
-    formData.append('data', results);
-
+    // --- INVIO FORZATO "OPAQUE" (no-cors) ---
+    // Questo è il modo più aggressivo per aggirare il blocco browser.
+    // Non avremo conferma dal server, ma il pacchetto viene inviato.
     fetch("https://pipe.jspsych.org/api/v1/data", {
         method: "POST",
-        body: formData, // Niente JSON, solo dati "grezzi"
-        mode: 'no-cors' // Chiede al browser di ignorare l'errore Origin (anche se non riceveremo conferma)
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+            experimentID: DATAPIPE_ID, 
+            filename: `${psychoJS.experiment.dataFileName}.csv`, 
+            data: results 
+        })
     });
 
     setTimeout(() => {
