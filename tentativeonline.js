@@ -1,6 +1,5 @@
-/************************ * Tentativeonline - NO-CORS BYPASS 
- * Solves: 'Origin not allowed' by forcing an opaque request
- * ID: lGJG7547rPOO
+/************************ * Tentativeonline - GOOGLE DRIVE INTEGRATION 
+ * Solves: All CORS/Server issues by sending data directly to Google Drive
  ************************/
 
 import { core, data, sound, util, visual, hardware } from './lib/psychojs-2026.1.1.js';
@@ -12,7 +11,6 @@ let expName = 'tentativeonline';
 let expInfo = {'participant': ''};
 
 const psychoJS = new PsychoJS({ debug: true });
-const DATAPIPE_ID = 'lGJG7547rPOO'; 
 
 psychoJS.openWindow({
     fullscr: true,
@@ -33,6 +31,7 @@ psychoJS.scheduleCondition(function() { return (psychoJS.gui.dialogComponent.but
 flowScheduler.add(updateInfo);
 flowScheduler.add(experimentInit);
 
+// Define blocks and files
 const blocks = [
     { name: 'LN', file: 'conditions_LN.csv' },
     { name: 'VR', file: 'conditions_VR.csv' },
@@ -56,9 +55,13 @@ let resources = [
     { name: 'conditions_3DR.csv', path: './resources/conditions_3DR.csv' },
     { name: 'conditions_MX.csv', path: './resources/conditions_MX.csv' }
 ];
+
+// Add 3DR images
 for (let i = 11001; i <= 11066; i++) {
     resources.push({ name: `images/image_3DR/fig${i}.png`, path: `./resources/images/image_3DR/fig${i}.png` });
 }
+
+// Add MX images
 const mx_ids = [12043, 12044, 12045, 12046, 12047, 12048, 12050, 12053, 12054, 12055, 12056];
 for (let id of mx_ids) {
     resources.push({ name: `images/image_MX/fig${id}.png`, path: `./resources/images/image_MX/fig${id}.jpg` });
@@ -78,16 +81,21 @@ var totalQuestions = 16, currentQuestionIdx = 0;
 
 async function experimentInit() {
     routineClock = new util.Clock();
+    
+    // Setup visual components
     mainImage = new visual.ImageStim({ win: psychoJS.window, pos: [0, 0.15], size: [0.55, 0.4] });
     mainQ = new visual.TextStim({ win: psychoJS.window, font: 'Hiragino Kaku Gothic Pro', pos: [0, 0.42], height: 0.028, color: new util.Color('white'), wrapWidth: 0.9 });
     progressBox = new visual.Rect({ win: psychoJS.window, width: 0.8, height: 0.01, pos: [0, -0.48], lineColor: new util.Color('grey') });
     progressBar = new visual.Rect({ win: psychoJS.window, width: 0, height: 0.01, pos: [-0.4, -0.48], fillColor: new util.Color('white') });
+    
+    // Setup option boxes
     const x_pos = [-0.48, -0.16, 0.16, 0.48, -0.48, -0.16, 0.16, 0.48];
     const y_pos = [-0.22, -0.22, -0.22, -0.22, -0.35, -0.35, -0.35, -0.35];
     for (let i = 0; i < 8; i++) {
         opt_boxes[i] = new visual.Rect({ win: psychoJS.window, width: 0.3, height: 0.1, pos: [x_pos[i], y_pos[i]], lineColor: new util.Color('white'), fillColor: new util.Color('white') });
         opt_texts[i] = new visual.TextStim({ win: psychoJS.window, font: 'Hiragino Kaku Gothic Pro', pos: [x_pos[i], y_pos[i]], height: 0.022, color: new util.Color('black') });
     }
+    
     mouse = new core.Mouse({ win: psychoJS.window });
     return Scheduler.Event.NEXT;
 }
@@ -96,8 +104,10 @@ function trialsLoopBegin(scheduler, fileName, blockName) {
     return async function() {
         let allConditions = TrialHandler.importConditions(psychoJS.serverManager, fileName);
         util.shuffle(allConditions);
+        
         let trials = new TrialHandler({ psychoJS, nReps: 1, method: TrialHandler.Method.SEQUENTIAL, trialList: allConditions.slice(0, 4), name: blockName });
         psychoJS.experiment.addLoop(trials);
+        
         for (const thisTrial of trials) {
             scheduler.add(importConditions(trials.getSnapshot()));
             scheduler.add(routineBegin(thisTrial, blockName));
@@ -113,15 +123,27 @@ function routineBegin(thisTrial, blockName) {
         routineClock.reset();
         window.mouseWasReleased = false; 
         currentQuestionIdx++;
+        
+        // Update progress bar
         progressBar.setWidth((currentQuestionIdx / totalQuestions) * 0.8);
         progressBar.setPos([-0.4 + (progressBar.getWidth()/2), -0.48]);
+        
+        // Update image
         const img = thisTrial['image_file'];
-        if (img && !img.includes('blank')) { mainImage.setImage(img); mainImage.setOpacity(1.0); } else { mainImage.setOpacity(0.0); }
+        if (img && !img.includes('blank')) { 
+            mainImage.setImage(img); 
+            mainImage.setOpacity(1.0); 
+        } else { 
+            mainImage.setOpacity(0.0); 
+        }
+
+        // Update text
         mainQ.setText(thisTrial['QUESTION'] ? thisTrial['QUESTION'].toString().replace(/\\n/g, '\n') : "");
         for (let i = 1; i <= 8; i++) {
             opt_texts[i-1].setText(thisTrial[`choice${i}`] || "");
             opt_boxes[i-1].setFillColor(new util.Color('white'));
         }
+        
         psychoJS.experiment.addData('block', blockName);
         return Scheduler.Event.NEXT;
     }
@@ -131,7 +153,9 @@ function routineFrame() {
     return async function () {
         mainImage.setAutoDraw(true); mainQ.setAutoDraw(true); progressBox.setAutoDraw(true); progressBar.setAutoDraw(true);
         opt_boxes.forEach(b => b.setAutoDraw(true)); opt_texts.forEach(t => t.setAutoDraw(true));
+        
         if (mouse.getPressed()[0] === 0) window.mouseWasReleased = true;
+        
         if (mouse.getPressed()[0] === 1 && window.mouseWasReleased) {
             for (let i = 0; i < 8; i++) {
                 if (opt_boxes[i].contains(mouse)) {
@@ -154,23 +178,29 @@ function routineEnd() {
 }
 
 async function quitPsychoJS() {
+    // 1. Generate the CSV results
     const results = psychoJS.experiment.save({attributes: expInfo});
-    psychoJS.experiment.save(); // Backup locale download
+    
+    // 2. Backup: Download locally on the participant's machine
+    psychoJS.experiment.save();
 
-    // --- INVIO FORZATO "OPAQUE" (no-cors) ---
-    // Questo è il modo più aggressivo per aggirare il blocco browser.
-    // Non avremo conferma dal server, ma il pacchetto viene inviato.
-    fetch("https://pipe.jspsych.org/api/v1/data", {
+    // 3. SEND TO GOOGLE DRIVE (The URL you generated)
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwP8_gJSFoem381SY9UD9smCE48CRLba_9DHfUnjAWWL1N7t9ZcFHP7wydEITP5y_Ey/exec";
+
+    // Use mode: 'no-cors' so Safari/Chrome won't block the request
+    fetch(GOOGLE_SCRIPT_URL, {
         method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
+        mode: "no-cors", 
+        headers: {
+            "Content-Type": "text/plain" 
+        },
         body: JSON.stringify({ 
-            experimentID: DATAPIPE_ID, 
             filename: `${psychoJS.experiment.dataFileName}.csv`, 
             data: results 
         })
     });
 
+    // Wait 2.5 seconds to ensure the data is sent, then close
     setTimeout(() => {
         psychoJS.window.close();
         psychoJS.quit();
