@@ -1,5 +1,5 @@
-/************************ * Tentativeonline - BEACON STABLE VERSION 
- * Solves: CORS 'Origin not allowed' error
+/************************ * Tentativeonline - CORS BYPASS VERSION 
+ * Solves: Origin not allowed / Access Control Checks
  * ID: lGJG7547rPOO
  ************************/
 
@@ -138,9 +138,7 @@ function routineFrame() {
     return async function () {
         mainImage.setAutoDraw(true); mainQ.setAutoDraw(true); progressBox.setAutoDraw(true); progressBar.setAutoDraw(true);
         opt_boxes.forEach(b => b.setAutoDraw(true)); opt_texts.forEach(t => t.setAutoDraw(true));
-        
         if (mouse.getPressed()[0] === 0) window.mouseWasReleased = true;
-        
         if (mouse.getPressed()[0] === 1 && window.mouseWasReleased) {
             for (let i = 0; i < 8; i++) {
                 if (opt_boxes[i].contains(mouse)) {
@@ -163,13 +161,10 @@ function routineEnd() {
 }
 
 async function quitPsychoJS() {
-    // 1. Genera i risultati CSV (stringa)
     const results = psychoJS.experiment.save({attributes: expInfo});
-    
-    // 2. Backup: Scarica il file sul Mac
-    psychoJS.experiment.save();
+    psychoJS.experiment.save(); // Backup locale
 
-    // 3. INVIO BEACON (Metodo più robusto contro errori CORS)
+    // --- INVIO "FORZATO" SENZA CONTROLLI CORS ---
     const url = "https://pipe.jspsych.org/api/v1/data";
     const payload = JSON.stringify({ 
         experimentID: DATAPIPE_ID, 
@@ -177,14 +172,14 @@ async function quitPsychoJS() {
         data: results 
     });
 
-    // Invia i dati come pacchetto Blob per aggirare i controlli 'Origin'
-    navigator.sendBeacon(url, new Blob([payload], {type: 'application/json'}));
+    // Usiamo 'sendBeacon' con un Blob senza headers complessi
+    // Questo è il modo più efficace per Safari/Chrome
+    navigator.sendBeacon(url, new Blob([payload], {type: 'text/plain'}));
 
-    // Aspettiamo un po' e chiudiamo
     setTimeout(() => {
         psychoJS.window.close();
         psychoJS.quit();
-    }, 2500);
+    }, 2000);
 
     return Scheduler.Event.QUIT;
 }
