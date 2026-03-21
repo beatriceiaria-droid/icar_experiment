@@ -1,5 +1,5 @@
-/************************ * Tentativeonline - CORS BYPASS VERSION 
- * Solves: Origin not allowed / Access Control Checks
+/************************ * Tentativeonline - FINAL CORS BYPASS 
+ * Solves: 'Origin not allowed' by using a CORS Proxy
  * ID: lGJG7547rPOO
  ************************/
 
@@ -164,22 +164,26 @@ async function quitPsychoJS() {
     const results = psychoJS.experiment.save({attributes: expInfo});
     psychoJS.experiment.save(); // Backup locale
 
-    // --- INVIO "FORZATO" SENZA CONTROLLI CORS ---
-    const url = "https://pipe.jspsych.org/api/v1/data";
-    const payload = JSON.stringify({ 
-        experimentID: DATAPIPE_ID, 
-        filename: `${psychoJS.experiment.dataFileName}.csv`, 
-        data: results 
-    });
+    // --- INVIO TRAMITE PROXY ---
+    const targetUrl = "https://pipe.jspsych.org/api/v1/data";
+    const proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(targetUrl);
 
-    // Usiamo 'sendBeacon' con un Blob senza headers complessi
-    // Questo è il modo più efficace per Safari/Chrome
-    navigator.sendBeacon(url, new Blob([payload], {type: 'text/plain'}));
+    fetch(proxyUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+            experimentID: DATAPIPE_ID, 
+            filename: `${psychoJS.experiment.dataFileName}.csv`, 
+            data: results 
+        })
+    })
+    .then(response => console.log("DataPipe status (via Proxy):", response.status))
+    .catch(err => console.error("Errore Proxy:", err));
 
     setTimeout(() => {
         psychoJS.window.close();
         psychoJS.quit();
-    }, 2000);
+    }, 3000);
 
     return Scheduler.Event.QUIT;
 }
