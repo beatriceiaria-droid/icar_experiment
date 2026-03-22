@@ -1,7 +1,7 @@
 /********************************************************
- * Tentativeonline - FINAL BULLETPROOF VERSION
+ * Tentativeonline - FINAL ROLLBACK & FULL RUN
  * PhD Research Data Collection
- * Features: Fixed 3DR Aspect Ratio, Fixed MX Spacing, Hover Bug Removed
+ * Features: Restored Good Proportions, 102 Total Trials Enabled
  ********************************************************/
 
 import { core, data, sound, util, visual, hardware } from './lib/psychojs-2026.1.1.js';
@@ -12,8 +12,10 @@ const { Scheduler } = util;
 let expName = 'tentativeonline';
 let expInfo = {'participant': ''};
 
+// Initialize PsychoJS
 const psychoJS = new PsychoJS({ debug: true });
 
+// Open window
 psychoJS.openWindow({
     fullscr: true,
     color: new util.Color('black'),
@@ -21,6 +23,7 @@ psychoJS.openWindow({
     waitBlanking: true
 });
 
+// Schedule dialog box
 psychoJS.schedule(psychoJS.gui.DlgFromDict({
     dictionary: expInfo,
     title: expName
@@ -30,9 +33,11 @@ const flowScheduler = new Scheduler(psychoJS);
 const dialogCancelScheduler = new Scheduler(psychoJS);
 psychoJS.scheduleCondition(function() { return (psychoJS.gui.dialogComponent.button === 'OK'); }, flowScheduler, dialogCancelScheduler);
 
+// Add main routines to scheduler
 flowScheduler.add(updateInfo);
 flowScheduler.add(experimentInit);
 
+// Define experiment blocks
 const blocks = [
     { name: 'LN', file: 'conditions_LN.csv' },
     { name: 'VR', file: 'conditions_VR.csv' },
@@ -40,6 +45,7 @@ const blocks = [
     { name: 'MX', file: 'conditions_MX.csv' }
 ];
 
+// Schedule loops for each block
 for (const block of blocks) {
     const loopScheduler = new Scheduler(psychoJS);
     flowScheduler.add(trialsLoopBegin(loopScheduler, block.file, block.name));
@@ -47,9 +53,10 @@ for (const block of blocks) {
     flowScheduler.add(trialsLoopEnd);
 }
 
+// Add quit routine
 flowScheduler.add(quitPsychoJS);
 
-// --- RESOURCES MANAGEMENT (Exactly 81 items for 102 questions) ---
+// --- RESOURCES MANAGEMENT (81 Downloads for 102 Questions) ---
 let resources = [
     { name: 'conditions_LN.csv', path: './resources/conditions_LN.csv' },
     { name: 'conditions_VR.csv', path: './resources/conditions_VR.csv' },
@@ -68,6 +75,7 @@ for (let id of mx_ids) {
     resources.push({ name: `images/image_MX/fig${id}.png`, path: `./resources/images/image_MX/fig${id}.jpg` });
 }
 
+// Start experiment
 psychoJS.start({ expName, expInfo, resources });
 
 async function updateInfo() {
@@ -76,10 +84,13 @@ async function updateInfo() {
     return Scheduler.Event.NEXT;
 }
 
+// --- VISUAL COMPONENTS & SCORING SETUP ---
 var routineClock, mainImage, mainQ, mouse, progressBar, progressBox;
 var opt_texts = [], opt_boxes = [];
-var totalQuestions = 16, currentQuestionIdx = 0;
+// SET TO FULL 102 QUESTIONS!
+var totalQuestions = 102, currentQuestionIdx = 0; 
 
+// Scoring trackers
 var scores = {
     TOTAL: 0,
     LN: 0,
@@ -91,6 +102,7 @@ var scores = {
 async function experimentInit() {
     routineClock = new util.Clock();
     
+    // UI: Main Image 
     mainImage = new visual.ImageStim({ 
         win: psychoJS.window, 
         pos: [0, 0.15], 
@@ -98,6 +110,7 @@ async function experimentInit() {
         interpolate: true 
     });
     
+    // UI: Main Question
     mainQ = new visual.TextStim({ 
         win: psychoJS.window, 
         font: 'Hiragino Kaku Gothic Pro', 
@@ -107,9 +120,11 @@ async function experimentInit() {
         wrapWidth: 0.9 
     });
     
+    // UI: Progress bar
     progressBox = new visual.Rect({ win: psychoJS.window, width: 0.8, height: 0.01, pos: [0, -0.48], lineColor: new util.Color('grey') });
     progressBar = new visual.Rect({ win: psychoJS.window, width: 0, height: 0.01, pos: [-0.4, -0.48], fillColor: new util.Color('white') });
     
+    // UI: Option bounding boxes and text
     const x_pos = [-0.48, -0.16, 0.16, 0.48, -0.48, -0.16, 0.16, 0.48];
     const y_pos = [-0.22, -0.22, -0.22, -0.22, -0.35, -0.35, -0.35, -0.35];
     
@@ -127,11 +142,12 @@ function trialsLoopBegin(scheduler, fileName, blockName) {
         let allConditions = TrialHandler.importConditions(psychoJS.serverManager, fileName);
         util.shuffle(allConditions);
         
+        // NO MORE SLICE! RUNS ALL QUESTIONS IN THE CSV
         let trials = new TrialHandler({ 
             psychoJS, 
             nReps: 1, 
             method: TrialHandler.Method.SEQUENTIAL, 
-            trialList: allConditions.slice(0, 4), 
+            trialList: allConditions, 
             name: blockName 
         });
         psychoJS.experiment.addLoop(trials);
@@ -166,48 +182,54 @@ function routineBegin(thisTrial, blockName) {
         window.mouseWasReleased = false; 
         currentQuestionIdx++;
         
+        // Update progress bar
         progressBar.setWidth((currentQuestionIdx / totalQuestions) * 0.8);
         progressBar.setPos([-0.4 + (progressBar.getWidth()/2), -0.48]);
         
+        // --- DYNAMIC UI ADJUSTMENT ---
         const img = thisTrial['image_file'];
         
         if (img && !img.includes('blank')) { 
             mainImage.setImage(img); 
             mainImage.setOpacity(1.0); 
             
+            // RIPRISTINATE LE MISURE CHE FUNZIONAVANO BENE
             if (blockName === '3DR') {
-                // 3DR: PIÙ ALTO E MENO LARGO
-                mainImage.setPos([0, 0.05]);  
-                mainImage.setSize([0.80, 0.35]); 
+                mainImage.setPos([0, 0.10]);  
+                mainImage.setSize([1.00, 0.30]); // Proporzione bilanciata, non schiacciata
             } else if (blockName === 'MX') {
-                // MX: IMMAGINE ABBASSATA NOTEVOLMENTE (-0.05)
-                mainImage.setPos([0, -0.05]); 
-                mainImage.setSize([0.40, 0.40]); 
+                mainImage.setPos([0, 0.12]); // Riportato su al centro, distanziato dai bottoni
+                mainImage.setSize([0.45, 0.45]); // Quadrato naturale
             } else {
-                mainImage.setPos([0, 0.05]);
+                mainImage.setPos([0, 0.10]);
                 mainImage.setSize([0.60, 0.30]);
             }
             
-            // TESTO ALZATO PER NON SOVRAPPORSI
+            // Testo in alto
             mainQ.setPos([0, 0.42]);
-            mainQ.setHeight(0.026);
+            mainQ.setHeight(0.028);
             mainQ.setWrapWidth(1.2); 
         } else { 
+            // Phase without images (LN, VR)
             mainImage.setOpacity(0.0); 
             
+            // Center text
             mainQ.setPos([0, 0.15]);
             mainQ.setHeight(0.040);
-            mainQ.setWrapWidth(0.90); 
+            
+            // Margini eleganti
+            mainQ.setWrapWidth(0.85); 
         }
 
+        // Set question text
         mainQ.setText(thisTrial['QUESTION'] ? thisTrial['QUESTION'].toString().replace(/\\n/g, '\n') : "");
         
+        // Set choices text
         for (let i = 1; i <= 8; i++) {
             let choiceText = thisTrial[`choice${i}`];
             choiceText = choiceText ? choiceText.toString().replace(/\\n/g, '\n') : "";
             
             opt_texts[i-1].setText(choiceText);
-            // Assicura che le scatole restino bianche e pulite
             opt_boxes[i-1].setFillColor(new util.Color('white'));
         }
         
@@ -225,7 +247,7 @@ function routineFrame(thisTrial, blockName) {
         opt_boxes.forEach(b => b.setAutoDraw(true)); 
         opt_texts.forEach(t => t.setAutoDraw(true));
         
-        // HOVER RIMOSSO PER EVITARE BUG DI Z-INDEX E TESTO SPARITO
+        // Hover rimosso per stabilità visiva (evita che il testo sparisca)
 
         if (mouse.getPressed()[0] === 0) window.mouseWasReleased = true;
         
@@ -264,11 +286,11 @@ function routineEnd() {
 
 async function quitPsychoJS() {
     psychoJS.experiment.addData('block', 'FINAL_SUMMARY');
-    psychoJS.experiment.addData('score_TOTAL', `${scores.TOTAL}/16`);
-    psychoJS.experiment.addData('score_LN', `${scores.LN}/4`);
-    psychoJS.experiment.addData('score_VR', `${scores.VR}/4`);
-    psychoJS.experiment.addData('score_3DR', `${scores['3DR']}/4`);
-    psychoJS.experiment.addData('score_MX', `${scores.MX}/4`);
+    psychoJS.experiment.addData('score_TOTAL', `${scores.TOTAL}/102`);
+    psychoJS.experiment.addData('score_LN', `${scores.LN}/9`);
+    psychoJS.experiment.addData('score_VR', `${scores.VR}/16`);
+    psychoJS.experiment.addData('score_3DR', `${scores['3DR']}/66`);
+    psychoJS.experiment.addData('score_MX', `${scores.MX}/11`);
     psychoJS.experiment.nextEntry(); 
 
     psychoJS.experiment.save();
