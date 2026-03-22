@@ -1,7 +1,7 @@
 /********************************************************
  * Tentativeonline - FINAL CORRECTION
  * PhD Research Data Collection
- * Features: 16 Random Trials Restored, Specific Aspect Ratios
+ * Features: 16 Random Trials Restored, Images slightly raised
  ********************************************************/
 
 import { core, data, sound, util, visual, hardware } from './lib/psychojs-2026.1.1.js';
@@ -88,7 +88,7 @@ async function updateInfo() {
 var routineClock, mainImage, mainQ, mouse, progressBar, progressBox;
 var opt_texts = [], opt_boxes = [];
 
-// RIPRISTINATE LE 16 DOMANDE TOTALI (4 per categoria)
+// 16 DOMANDE TOTALI (4 per categoria)
 var totalQuestions = 16, currentQuestionIdx = 0; 
 
 var scores = {
@@ -138,7 +138,6 @@ function trialsLoopBegin(scheduler, fileName, blockName) {
         let allConditions = TrialHandler.importConditions(psychoJS.serverManager, fileName);
         util.shuffle(allConditions);
         
-        // RIPRISTINATO IL CAMPIONAMENTO CASUALE DI 4 DOMANDE
         let trials = new TrialHandler({ 
             psychoJS, 
             nReps: 1, 
@@ -187,17 +186,16 @@ function routineBegin(thisTrial, blockName) {
             mainImage.setImage(img); 
             mainImage.setOpacity(1.0); 
             
-            // MISURE CORRETTE COME DA TUE ISTRUZIONI
             if (blockName === '3DR') {
-                mainImage.setPos([0, 0.05]);  
-                // AUMENTATA L'ALTEZZA
+                // IMMAGINE ALZATA A 0.10
+                mainImage.setPos([0, 0.10]);  
                 mainImage.setSize([0.85, 0.45]); 
             } else if (blockName === 'MX') {
-                mainImage.setPos([0, 0.08]); 
-                // AUMENTATA LA LARGHEZZA E LEGGERMENTE L'ALTEZZA
+                // IMMAGINE ALZATA A 0.13
+                mainImage.setPos([0, 0.13]); 
                 mainImage.setSize([0.55, 0.48]); 
             } else {
-                mainImage.setPos([0, 0.05]);
+                mainImage.setPos([0, 0.10]);
                 mainImage.setSize([0.60, 0.30]);
             }
             
@@ -205,7 +203,6 @@ function routineBegin(thisTrial, blockName) {
             mainQ.setHeight(0.028);
             mainQ.setWrapWidth(1.2); 
         } else { 
-            // VR e LN
             mainImage.setOpacity(0.0); 
             
             mainQ.setPos([0, 0.15]);
