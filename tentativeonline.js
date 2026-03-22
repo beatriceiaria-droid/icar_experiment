@@ -1,7 +1,7 @@
 /********************************************************
  * Tentativeonline - FINAL UI/UX POLISH & SCORING
  * PhD Research Data Collection
- * Features: Fixed Image Aspect Ratio (Wider), Larger Text Margins
+ * Features: Block-specific Aspect Ratios (3DR vs MX), Huge Text Margins
  ********************************************************/
 
 import { core, data, sound, util, visual, hardware } from './lib/psychojs-2026.1.1.js';
@@ -188,16 +188,26 @@ function routineBegin(thisTrial, blockName) {
         const img = thisTrial['image_file'];
         
         if (img && !img.includes('blank')) { 
-            // Phase with images (3DR, MX)
             mainImage.setImage(img); 
             mainImage.setOpacity(1.0); 
             
-            // WIDER IMAGE TO FIX ASPECT RATIO (Squashed sides)
-            mainImage.setPos([0, 0.12]);  
-            mainImage.setSize([0.90, 0.52]); // Increased X from 0.76 to 0.90
+            // BLOCK-SPECIFIC IMAGE SIZING
+            if (blockName === '3DR') {
+                // 3DR: Very wide image (row of cubes). Respect aspect ratio!
+                mainImage.setPos([0, 0.10]);  
+                mainImage.setSize([1.20, 0.32]); // Wide but not too tall
+            } else if (blockName === 'MX') {
+                // MX: Square/grid image. Make it huge and push it up.
+                mainImage.setPos([0, 0.16]); // Shifted UP closer to the text
+                mainImage.setSize([0.70, 0.55]); // Taller and proportionally wider
+            } else {
+                // Fallback
+                mainImage.setPos([0, 0.12]);
+                mainImage.setSize([0.80, 0.40]);
+            }
             
-            // Push text as far up as possible without getting cut off
-            mainQ.setPos([0, 0.44]);
+            // Push text up for image trials
+            mainQ.setPos([0, 0.43]);
             mainQ.setHeight(0.028);
             mainQ.setWrapWidth(1.4); 
         } else { 
@@ -208,8 +218,8 @@ function routineBegin(thisTrial, blockName) {
             mainQ.setPos([0, 0.15]);
             mainQ.setHeight(0.045);
             
-            // INCREASED MARGINS: Reduced from 1.0 to 0.85
-            mainQ.setWrapWidth(0.85); 
+            // MASSIVE MARGINS: Reduced wrapWidth to 0.65 (forces text away from edges)
+            mainQ.setWrapWidth(0.65); 
         }
 
         // Set question text
