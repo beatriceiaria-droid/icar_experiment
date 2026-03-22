@@ -1,7 +1,7 @@
 /********************************************************
  * Tentativeonline - FINAL UI/UX POLISH & SCORING
  * PhD Research Data Collection
- * Features: True Squares (MX), Wide Strips (3DR), 102 Total Questions
+ * Features: Fixed Overlaps, Un-squashed 3DR, Guaranteed Hover UX
  ********************************************************/
 
 import { core, data, sound, util, visual, hardware } from './lib/psychojs-2026.1.1.js';
@@ -56,7 +56,9 @@ for (const block of blocks) {
 // Add quit routine
 flowScheduler.add(quitPsychoJS);
 
-// --- RESOURCES MANAGEMENT (Exactly 81 items to download) ---
+// ========================================================================
+// 🚨 BEATRICE: MODIFICA I NUMERI DELLE IMMAGINI QUI! 🚨
+// ========================================================================
 let resources = [
     { name: 'conditions_LN.csv', path: './resources/conditions_LN.csv' },
     { name: 'conditions_VR.csv', path: './resources/conditions_VR.csv' },
@@ -64,16 +66,17 @@ let resources = [
     { name: 'conditions_MX.csv', path: './resources/conditions_MX.csv' }
 ];
 
-// Load 3DR images (66 items)
-for (let i = 11001; i <= 11066; i++) {
+// 1. IMMAGINI 3DR: 
+for (let i = 11001; i <= 11066; i++) { 
     resources.push({ name: `images/image_3DR/fig${i}.png`, path: `./resources/images/image_3DR/fig${i}.png` });
 }
 
-// Load MX images (11 items)
-const mx_ids = [12043, 12044, 12045, 12046, 12047, 12048, 12050, 12053, 12054, 12055, 12056];
+// 2. IMMAGINI MX: 
+const mx_ids = [12043, 12044, 12045, 12046, 12047, 12048, 12050, 12053, 12054, 12055, 12056]; 
 for (let id of mx_ids) {
     resources.push({ name: `images/image_MX/fig${id}.png`, path: `./resources/images/image_MX/fig${id}.jpg` });
 }
+// ========================================================================
 
 // Start experiment
 psychoJS.start({ expName, expInfo, resources });
@@ -113,7 +116,7 @@ async function experimentInit() {
     mainQ = new visual.TextStim({ 
         win: psychoJS.window, 
         font: 'Hiragino Kaku Gothic Pro', 
-        pos: [0, 0.42], 
+        pos: [0, 0.45], // Spinto vicinissimo al bordo superiore
         height: 0.028, 
         color: new util.Color('white'), 
         wrapWidth: 0.9 
@@ -141,7 +144,6 @@ function trialsLoopBegin(scheduler, fileName, blockName) {
         let allConditions = TrialHandler.importConditions(psychoJS.serverManager, fileName);
         util.shuffle(allConditions);
         
-        // Define trials (we pull exactly what's needed for the 4 questions)
         let trials = new TrialHandler({ 
             psychoJS, 
             nReps: 1, 
@@ -192,22 +194,22 @@ function routineBegin(thisTrial, blockName) {
             mainImage.setImage(img); 
             mainImage.setOpacity(1.0); 
             
-            // EXACT MATHEMATICAL PROPORTIONS (Based on units: height)
+            // EXACT MATHEMATICAL PROPORTIONS
             if (blockName === '3DR') {
-                // Wide strip, keeps the cubes intact
-                mainImage.setPos([0, 0.10]);  
-                mainImage.setSize([1.10, 0.22]); 
+                // Più altezza, meno larghezza: i dadi tornano perfetti
+                mainImage.setPos([0, 0.05]);  
+                mainImage.setSize([0.90, 0.28]); 
             } else if (blockName === 'MX') {
-                // Perfect mathematical square
-                mainImage.setPos([0, 0.14]); 
-                mainImage.setSize([0.40, 0.40]); 
+                // Abbassato moltissimo (0.02) per allontanarlo dal testo!
+                mainImage.setPos([0, 0.02]); 
+                mainImage.setSize([0.38, 0.38]); 
             } else {
-                mainImage.setPos([0, 0.12]);
-                mainImage.setSize([0.80, 0.40]);
+                mainImage.setPos([0, 0.05]);
+                mainImage.setSize([0.60, 0.30]);
             }
             
-            // Push text up for image trials, safely away from images
-            mainQ.setPos([0, 0.42]);
+            // Text spinto in alto al limite
+            mainQ.setPos([0, 0.46]);
             mainQ.setHeight(0.026);
             mainQ.setWrapWidth(1.2); 
         } else { 
@@ -218,20 +220,20 @@ function routineBegin(thisTrial, blockName) {
             mainQ.setPos([0, 0.15]);
             mainQ.setHeight(0.040);
             
-            // MARGINS FIXED: 0.90 forces generous margins on the left and right
+            // MARGINS FIXED
             mainQ.setWrapWidth(0.90); 
         }
 
         // Set question text
         mainQ.setText(thisTrial['QUESTION'] ? thisTrial['QUESTION'].toString().replace(/\\n/g, '\n') : "");
         
-        // Set choices text
+        // Set choices text and reset opacity
         for (let i = 1; i <= 8; i++) {
             let choiceText = thisTrial[`choice${i}`];
             choiceText = choiceText ? choiceText.toString().replace(/\\n/g, '\n') : "";
             
             opt_texts[i-1].setText(choiceText);
-            // Reset colors at the start of each question
+            opt_boxes[i-1].setOpacity(1.0); // Resetting opacity
             opt_boxes[i-1].setFillColor(new util.Color('white'));
         }
         
@@ -249,14 +251,14 @@ function routineFrame(thisTrial, blockName) {
         opt_boxes.forEach(b => b.setAutoDraw(true)); 
         opt_texts.forEach(t => t.setAutoDraw(true));
         
-        // --- MOUSE HOVER EFFECT ---
+        // --- UX: THE INFALLIBLE HOVER EFFECT (OPACITY BASED) ---
         for (let i = 0; i < 8; i++) {
             if (opt_boxes[i].contains(mouse)) {
-                // Light gray when mouse is over
-                opt_boxes[i].setFillColor(new util.Color('#e0e0e0'));
+                // Dim the box slightly when hovered to create an elegant interaction
+                opt_boxes[i].setOpacity(0.6);
             } else {
-                // White when mouse is not over
-                opt_boxes[i].setFillColor(new util.Color('white'));
+                // Solid white when not hovered
+                opt_boxes[i].setOpacity(1.0);
             }
         }
 
