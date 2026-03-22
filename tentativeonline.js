@@ -1,7 +1,7 @@
 /********************************************************
- * Tentativeonline - FINAL ROLLBACK & FULL RUN
+ * Tentativeonline - FINAL ROLLBACK & PERFECT GEOMETRY
  * PhD Research Data Collection
- * Features: Restored Good Proportions, 102 Total Trials Enabled
+ * Features: Restored Proportions, 102 Questions, No Hover Bug
  ********************************************************/
 
 import { core, data, sound, util, visual, hardware } from './lib/psychojs-2026.1.1.js';
@@ -56,7 +56,9 @@ for (const block of blocks) {
 // Add quit routine
 flowScheduler.add(quitPsychoJS);
 
-// --- RESOURCES MANAGEMENT (81 Downloads for 102 Questions) ---
+// ========================================================================
+// CARICAMENTO IMMAGINI (81 File in totale)
+// ========================================================================
 let resources = [
     { name: 'conditions_LN.csv', path: './resources/conditions_LN.csv' },
     { name: 'conditions_VR.csv', path: './resources/conditions_VR.csv' },
@@ -64,12 +66,10 @@ let resources = [
     { name: 'conditions_MX.csv', path: './resources/conditions_MX.csv' }
 ];
 
-// Load 3DR images (66 items)
 for (let i = 11001; i <= 11066; i++) {
     resources.push({ name: `images/image_3DR/fig${i}.png`, path: `./resources/images/image_3DR/fig${i}.png` });
 }
 
-// Load MX images (11 items)
 const mx_ids = [12043, 12044, 12045, 12046, 12047, 12048, 12050, 12053, 12054, 12055, 12056];
 for (let id of mx_ids) {
     resources.push({ name: `images/image_MX/fig${id}.png`, path: `./resources/images/image_MX/fig${id}.jpg` });
@@ -87,10 +87,10 @@ async function updateInfo() {
 // --- VISUAL COMPONENTS & SCORING SETUP ---
 var routineClock, mainImage, mainQ, mouse, progressBar, progressBox;
 var opt_texts = [], opt_boxes = [];
-// SET TO FULL 102 QUESTIONS!
+
+// TUTTE LE 102 DOMANDE ATTIVATE
 var totalQuestions = 102, currentQuestionIdx = 0; 
 
-// Scoring trackers
 var scores = {
     TOTAL: 0,
     LN: 0,
@@ -102,7 +102,6 @@ var scores = {
 async function experimentInit() {
     routineClock = new util.Clock();
     
-    // UI: Main Image 
     mainImage = new visual.ImageStim({ 
         win: psychoJS.window, 
         pos: [0, 0.15], 
@@ -110,7 +109,6 @@ async function experimentInit() {
         interpolate: true 
     });
     
-    // UI: Main Question
     mainQ = new visual.TextStim({ 
         win: psychoJS.window, 
         font: 'Hiragino Kaku Gothic Pro', 
@@ -120,11 +118,9 @@ async function experimentInit() {
         wrapWidth: 0.9 
     });
     
-    // UI: Progress bar
     progressBox = new visual.Rect({ win: psychoJS.window, width: 0.8, height: 0.01, pos: [0, -0.48], lineColor: new util.Color('grey') });
     progressBar = new visual.Rect({ win: psychoJS.window, width: 0, height: 0.01, pos: [-0.4, -0.48], fillColor: new util.Color('white') });
     
-    // UI: Option bounding boxes and text
     const x_pos = [-0.48, -0.16, 0.16, 0.48, -0.48, -0.16, 0.16, 0.48];
     const y_pos = [-0.22, -0.22, -0.22, -0.22, -0.35, -0.35, -0.35, -0.35];
     
@@ -142,7 +138,7 @@ function trialsLoopBegin(scheduler, fileName, blockName) {
         let allConditions = TrialHandler.importConditions(psychoJS.serverManager, fileName);
         util.shuffle(allConditions);
         
-        // NO MORE SLICE! RUNS ALL QUESTIONS IN THE CSV
+        // ESEGUE L'INTERO FILE CSV (102 Domande Totali)
         let trials = new TrialHandler({ 
             psychoJS, 
             nReps: 1, 
@@ -182,55 +178,51 @@ function routineBegin(thisTrial, blockName) {
         window.mouseWasReleased = false; 
         currentQuestionIdx++;
         
-        // Update progress bar
         progressBar.setWidth((currentQuestionIdx / totalQuestions) * 0.8);
         progressBar.setPos([-0.4 + (progressBar.getWidth()/2), -0.48]);
         
-        // --- DYNAMIC UI ADJUSTMENT ---
         const img = thisTrial['image_file'];
         
         if (img && !img.includes('blank')) { 
             mainImage.setImage(img); 
             mainImage.setOpacity(1.0); 
             
-            // RIPRISTINATE LE MISURE CHE FUNZIONAVANO BENE
+            // GEOMETRIA CORRETTA E DEFINITIVA
             if (blockName === '3DR') {
-                mainImage.setPos([0, 0.10]);  
-                mainImage.setSize([1.00, 0.30]); // Proporzione bilanciata, non schiacciata
+                mainImage.setPos([0, 0.05]);  
+                // Aumentata altezza, diminuita larghezza per non schiacciare
+                mainImage.setSize([0.85, 0.35]); 
             } else if (blockName === 'MX') {
-                mainImage.setPos([0, 0.12]); // Riportato su al centro, distanziato dai bottoni
-                mainImage.setSize([0.45, 0.45]); // Quadrato naturale
+                // Alzata per non farla sparire, ma tenuta sotto al testo
+                mainImage.setPos([0, 0.08]); 
+                // Quadrato perfetto per non allargarla
+                mainImage.setSize([0.45, 0.45]); 
             } else {
-                mainImage.setPos([0, 0.10]);
+                mainImage.setPos([0, 0.05]);
                 mainImage.setSize([0.60, 0.30]);
             }
             
-            // Testo in alto
-            mainQ.setPos([0, 0.42]);
+            // TESTO ALZATO per non sovrapporsi mai
+            mainQ.setPos([0, 0.44]);
             mainQ.setHeight(0.028);
             mainQ.setWrapWidth(1.2); 
         } else { 
-            // Phase without images (LN, VR)
+            // VR e LN
             mainImage.setOpacity(0.0); 
             
-            // Center text
             mainQ.setPos([0, 0.15]);
             mainQ.setHeight(0.040);
-            
-            // Margini eleganti
-            mainQ.setWrapWidth(0.85); 
+            mainQ.setWrapWidth(0.90); 
         }
 
-        // Set question text
         mainQ.setText(thisTrial['QUESTION'] ? thisTrial['QUESTION'].toString().replace(/\\n/g, '\n') : "");
         
-        // Set choices text
         for (let i = 1; i <= 8; i++) {
             let choiceText = thisTrial[`choice${i}`];
             choiceText = choiceText ? choiceText.toString().replace(/\\n/g, '\n') : "";
             
             opt_texts[i-1].setText(choiceText);
-            opt_boxes[i-1].setFillColor(new util.Color('white'));
+            opt_boxes[i-1].setFillColor(new util.Color('white')); // Scatole bianche fisse, niente bug
         }
         
         psychoJS.experiment.addData('block', blockName);
@@ -247,8 +239,6 @@ function routineFrame(thisTrial, blockName) {
         opt_boxes.forEach(b => b.setAutoDraw(true)); 
         opt_texts.forEach(t => t.setAutoDraw(true));
         
-        // Hover rimosso per stabilità visiva (evita che il testo sparisca)
-
         if (mouse.getPressed()[0] === 0) window.mouseWasReleased = true;
         
         if (mouse.getPressed()[0] === 1 && window.mouseWasReleased) {
