@@ -1,8 +1,8 @@
 /********************************************************
- * Tentativeonline - FINAL UI/UX POLISH & SCORING
- * PhD Research Data Collection
- * Features: Fixed Overlaps, Un-squashed 3DR, Guaranteed Hover UX
- ********************************************************/
+ * Tentativeonline - FINAL UI/UX POLISH & SCORING
+ * PhD Research Data Collection
+ * Features: Block-specific Aspect Ratios (3DR vs MX), Huge Text Margins
+ ********************************************************/
 
 import { core, data, sound, util, visual, hardware } from './lib/psychojs-2026.1.1.js';
 const { PsychoJS } = core;
@@ -17,16 +17,16 @@ const psychoJS = new PsychoJS({ debug: true });
 
 // Open window
 psychoJS.openWindow({
-    fullscr: true,
-    color: new util.Color('black'),
-    units: 'height',
-    waitBlanking: true
+    fullscr: true,
+    color: new util.Color('black'),
+    units: 'height',
+    waitBlanking: true
 });
 
 // Schedule dialog box
 psychoJS.schedule(psychoJS.gui.DlgFromDict({
-    dictionary: expInfo,
-    title: expName
+    dictionary: expInfo,
+    title: expName
 }));
 
 const flowScheduler = new Scheduler(psychoJS);
@@ -39,52 +39,49 @@ flowScheduler.add(experimentInit);
 
 // Define experiment blocks
 const blocks = [
-    { name: 'LN', file: 'conditions_LN.csv' },
-    { name: 'VR', file: 'conditions_VR.csv' },
-    { name: '3DR', file: 'conditions_3DR.csv' },
-    { name: 'MX', file: 'conditions_MX.csv' }
+    { name: 'LN', file: 'conditions_LN.csv' },
+    { name: 'VR', file: 'conditions_VR.csv' },
+    { name: '3DR', file: 'conditions_3DR.csv' },
+    { name: 'MX', file: 'conditions_MX.csv' }
 ];
 
 // Schedule loops for each block
 for (const block of blocks) {
-    const loopScheduler = new Scheduler(psychoJS);
-    flowScheduler.add(trialsLoopBegin(loopScheduler, block.file, block.name));
-    flowScheduler.add(loopScheduler);
-    flowScheduler.add(trialsLoopEnd);
+    const loopScheduler = new Scheduler(psychoJS);
+    flowScheduler.add(trialsLoopBegin(loopScheduler, block.file, block.name));
+    flowScheduler.add(loopScheduler);
+    flowScheduler.add(trialsLoopEnd);
 }
 
 // Add quit routine
 flowScheduler.add(quitPsychoJS);
 
-// ========================================================================
-// 🚨 BEATRICE: MODIFICA I NUMERI DELLE IMMAGINI QUI! 🚨
-// ========================================================================
+// --- RESOURCES MANAGEMENT ---
 let resources = [
-    { name: 'conditions_LN.csv', path: './resources/conditions_LN.csv' },
-    { name: 'conditions_VR.csv', path: './resources/conditions_VR.csv' },
-    { name: 'conditions_3DR.csv', path: './resources/conditions_3DR.csv' },
-    { name: 'conditions_MX.csv', path: './resources/conditions_MX.csv' }
+    { name: 'conditions_LN.csv', path: './resources/conditions_LN.csv' },
+    { name: 'conditions_VR.csv', path: './resources/conditions_VR.csv' },
+    { name: 'conditions_3DR.csv', path: './resources/conditions_3DR.csv' },
+    { name: 'conditions_MX.csv', path: './resources/conditions_MX.csv' }
 ];
 
-// 1. IMMAGINI 3DR: 
-for (let i = 11001; i <= 11066; i++) { 
-    resources.push({ name: `images/image_3DR/fig${i}.png`, path: `./resources/images/image_3DR/fig${i}.png` });
+// Load 3DR images
+for (let i = 11001; i <= 11066; i++) {
+    resources.push({ name: `images/image_3DR/fig${i}.png`, path: `./resources/images/image_3DR/fig${i}.png` });
 }
 
-// 2. IMMAGINI MX: 
-const mx_ids = [12043, 12044, 12045, 12046, 12047, 12048, 12050, 12053, 12054, 12055, 12056]; 
+// Load MX images
+const mx_ids = [12043, 12044, 12045, 12046, 12047, 12048, 12050, 12053, 12054, 12055, 12056];
 for (let id of mx_ids) {
-    resources.push({ name: `images/image_MX/fig${id}.png`, path: `./resources/images/image_MX/fig${id}.jpg` });
+    resources.push({ name: `images/image_MX/fig${id}.png`, path: `./resources/images/image_MX/fig${id}.jpg` });
 }
-// ========================================================================
 
 // Start experiment
 psychoJS.start({ expName, expInfo, resources });
 
 async function updateInfo() {
-    expInfo['date'] = util.MonotonicClock.getDateStr();
-    psychoJS.experiment.dataFileName = `${expInfo["participant"]}_${expName}_${expInfo['date']}`;
-    return Scheduler.Event.NEXT;
+    expInfo['date'] = util.MonotonicClock.getDateStr();
+    psychoJS.experiment.dataFileName = `${expInfo["participant"]}_${expName}_${expInfo['date']}`;
+    return Scheduler.Event.NEXT;
 }
 
 // --- VISUAL COMPONENTS & SCORING SETUP ---
@@ -94,255 +91,244 @@ var totalQuestions = 16, currentQuestionIdx = 0;
 
 // Scoring trackers
 var scores = {
-    TOTAL: 0,
-    LN: 0,
-    VR: 0,
-    '3DR': 0, 
-    MX: 0
+    TOTAL: 0,
+    LN: 0,
+    VR: 0,
+    '3DR': 0, 
+    MX: 0
 };
 
 async function experimentInit() {
-    routineClock = new util.Clock();
-    
-    // UI: Main Image 
-    mainImage = new visual.ImageStim({ 
-        win: psychoJS.window, 
-        pos: [0, 0.15], 
-        size: [0.55, 0.4],
-        interpolate: true 
-    });
-    
-    // UI: Main Question
-    mainQ = new visual.TextStim({ 
-        win: psychoJS.window, 
-        font: 'Hiragino Kaku Gothic Pro', 
-        pos: [0, 0.45], // Spinto vicinissimo al bordo superiore
-        height: 0.028, 
-        color: new util.Color('white'), 
-        wrapWidth: 0.9 
-    });
-    
-    // UI: Progress bar
-    progressBox = new visual.Rect({ win: psychoJS.window, width: 0.8, height: 0.01, pos: [0, -0.48], lineColor: new util.Color('grey') });
-    progressBar = new visual.Rect({ win: psychoJS.window, width: 0, height: 0.01, pos: [-0.4, -0.48], fillColor: new util.Color('white') });
-    
-    // UI: Option bounding boxes and text
-    const x_pos = [-0.48, -0.16, 0.16, 0.48, -0.48, -0.16, 0.16, 0.48];
-    const y_pos = [-0.22, -0.22, -0.22, -0.22, -0.35, -0.35, -0.35, -0.35];
-    
-    for (let i = 0; i < 8; i++) {
-        opt_boxes[i] = new visual.Rect({ win: psychoJS.window, width: 0.3, height: 0.1, pos: [x_pos[i], y_pos[i]], lineColor: new util.Color('white'), fillColor: new util.Color('white') });
-        opt_texts[i] = new visual.TextStim({ win: psychoJS.window, font: 'Hiragino Kaku Gothic Pro', pos: [x_pos[i], y_pos[i]], height: 0.022, color: new util.Color('black') });
-    }
-    
-    mouse = new core.Mouse({ win: psychoJS.window });
-    return Scheduler.Event.NEXT;
+    routineClock = new util.Clock();
+    
+    // UI: Main Image (Interpolate set to true for better resolution scaling)
+    mainImage = new visual.ImageStim({ 
+        win: psychoJS.window, 
+        pos: [0, 0.15], 
+        size: [0.55, 0.4],
+        interpolate: true 
+    });
+    
+    // UI: Main Question
+    mainQ = new visual.TextStim({ 
+        win: psychoJS.window, 
+        font: 'Hiragino Kaku Gothic Pro', 
+        pos: [0, 0.42], 
+        height: 0.028, 
+        color: new util.Color('white'), 
+        wrapWidth: 0.9 
+    });
+    
+    // UI: Progress bar
+    progressBox = new visual.Rect({ win: psychoJS.window, width: 0.8, height: 0.01, pos: [0, -0.48], lineColor: new util.Color('grey') });
+    progressBar = new visual.Rect({ win: psychoJS.window, width: 0, height: 0.01, pos: [-0.4, -0.48], fillColor: new util.Color('white') });
+    
+    // UI: Option bounding boxes and text
+    const x_pos = [-0.48, -0.16, 0.16, 0.48, -0.48, -0.16, 0.16, 0.48];
+    const y_pos = [-0.22, -0.22, -0.22, -0.22, -0.35, -0.35, -0.35, -0.35];
+    
+    for (let i = 0; i < 8; i++) {
+        opt_boxes[i] = new visual.Rect({ win: psychoJS.window, width: 0.3, height: 0.1, pos: [x_pos[i], y_pos[i]], lineColor: new util.Color('white'), fillColor: new util.Color('white') });
+        opt_texts[i] = new visual.TextStim({ win: psychoJS.window, font: 'Hiragino Kaku Gothic Pro', pos: [x_pos[i], y_pos[i]], height: 0.022, color: new util.Color('black') });
+    }
+    
+    mouse = new core.Mouse({ win: psychoJS.window });
+    return Scheduler.Event.NEXT;
 }
 
 function trialsLoopBegin(scheduler, fileName, blockName) {
-    return async function() {
-        let allConditions = TrialHandler.importConditions(psychoJS.serverManager, fileName);
-        util.shuffle(allConditions);
-        
-        let trials = new TrialHandler({ 
-            psychoJS, 
-            nReps: 1, 
-            method: TrialHandler.Method.SEQUENTIAL, 
-            trialList: allConditions.slice(0, 4), 
-            name: blockName 
-        });
-        psychoJS.experiment.addLoop(trials);
-        
-        const trialIterator = trials[Symbol.iterator]();
-        
-        function nextTrial() {
-            let stepResult = trialIterator.next();
-            if (stepResult.done) {
-                return Scheduler.Event.NEXT;
-            }
-            let thisTrial = stepResult.value;
-            
-            scheduler.add(importConditions(trials.getSnapshot()));
-            scheduler.add(routineBegin(thisTrial, blockName));
-            scheduler.add(routineFrame(thisTrial, blockName));
-            scheduler.add(routineEnd());
-            
-            scheduler.add(nextTrial); 
-            
-            return Scheduler.Event.NEXT;
-        }
-        
-        scheduler.add(nextTrial);
-        return Scheduler.Event.NEXT;
-    }
+    return async function() {
+        let allConditions = TrialHandler.importConditions(psychoJS.serverManager, fileName);
+        util.shuffle(allConditions);
+        
+        let trials = new TrialHandler({ 
+            psychoJS, 
+            nReps: 1, 
+            method: TrialHandler.Method.SEQUENTIAL, 
+            trialList: allConditions.slice(0, 4), 
+            name: blockName 
+        });
+        psychoJS.experiment.addLoop(trials);
+        
+        const trialIterator = trials[Symbol.iterator]();
+        
+        function nextTrial() {
+            let stepResult = trialIterator.next();
+            if (stepResult.done) {
+                return Scheduler.Event.NEXT;
+            }
+            let thisTrial = stepResult.value;
+            
+            scheduler.add(importConditions(trials.getSnapshot()));
+            scheduler.add(routineBegin(thisTrial, blockName));
+            scheduler.add(routineFrame(thisTrial, blockName));
+            scheduler.add(routineEnd());
+            
+            scheduler.add(nextTrial); 
+            
+            return Scheduler.Event.NEXT;
+        }
+        
+        scheduler.add(nextTrial);
+        return Scheduler.Event.NEXT;
+    }
 }
 
 function routineBegin(thisTrial, blockName) {
-    return async function () {
-        routineClock.reset();
-        window.mouseWasReleased = false; 
-        currentQuestionIdx++;
-        
-        // Update progress bar
-        progressBar.setWidth((currentQuestionIdx / totalQuestions) * 0.8);
-        progressBar.setPos([-0.4 + (progressBar.getWidth()/2), -0.48]);
-        
-        // --- DYNAMIC UI ADJUSTMENT ---
-        const img = thisTrial['image_file'];
-        
-        if (img && !img.includes('blank')) { 
-            mainImage.setImage(img); 
-            mainImage.setOpacity(1.0); 
-            
-            // EXACT MATHEMATICAL PROPORTIONS
-            if (blockName === '3DR') {
-                // Più altezza, meno larghezza: i dadi tornano perfetti
-                mainImage.setPos([0, 0.05]);  
-                mainImage.setSize([0.90, 0.28]); 
-            } else if (blockName === 'MX') {
-                // Abbassato moltissimo (0.02) per allontanarlo dal testo!
-                mainImage.setPos([0, 0.02]); 
-                mainImage.setSize([0.38, 0.38]); 
-            } else {
-                mainImage.setPos([0, 0.05]);
-                mainImage.setSize([0.60, 0.30]);
-            }
-            
-            // Text spinto in alto al limite
-            mainQ.setPos([0, 0.46]);
-            mainQ.setHeight(0.026);
-            mainQ.setWrapWidth(1.2); 
-        } else { 
-            // Phase without images (LN, VR)
-            mainImage.setOpacity(0.0); 
-            
-            // Center text, elegant size
-            mainQ.setPos([0, 0.15]);
-            mainQ.setHeight(0.040);
-            
-            // MARGINS FIXED
-            mainQ.setWrapWidth(0.90); 
-        }
+    return async function () {
+        routineClock.reset();
+        window.mouseWasReleased = false; 
+        currentQuestionIdx++;
+        
+        // Update progress bar
+        progressBar.setWidth((currentQuestionIdx / totalQuestions) * 0.8);
+        progressBar.setPos([-0.4 + (progressBar.getWidth()/2), -0.48]);
+        
+        // --- DYNAMIC UI ADJUSTMENT ---
+        const img = thisTrial['image_file'];
+        
+        if (img && !img.includes('blank')) { 
+            mainImage.setImage(img); 
+            mainImage.setOpacity(1.0); 
+            
+            // BLOCK-SPECIFIC IMAGE SIZING
+            if (blockName === '3DR') {
+                // 3DR: Very wide image (row of cubes). Respect aspect ratio!
+                mainImage.setPos([0, 0.10]);  
+                mainImage.setSize([1.20, 0.32]); // Wide but not too tall
+            } else if (blockName === 'MX') {
+                // MX: Square/grid image. Make it huge and push it up.
+                mainImage.setPos([0, 0.16]); // Shifted UP closer to the text
+                mainImage.setSize([0.70, 0.55]); // Taller and proportionally wider
+            } else {
+                // Fallback
+                mainImage.setPos([0, 0.12]);
+                mainImage.setSize([0.80, 0.40]);
+            }
+            
+            // Push text up for image trials
+            mainQ.setPos([0, 0.43]);
+            mainQ.setHeight(0.028);
+            mainQ.setWrapWidth(1.4); 
+        } else { 
+            // Phase without images (LN, VR)
+            mainImage.setOpacity(0.0); 
+            
+            // Center text, make it huge
+            mainQ.setPos([0, 0.15]);
+            mainQ.setHeight(0.045);
+            
+            // MASSIVE MARGINS: Reduced wrapWidth to 0.65 (forces text away from edges)
+            mainQ.setWrapWidth(0.65); 
+        }
 
-        // Set question text
-        mainQ.setText(thisTrial['QUESTION'] ? thisTrial['QUESTION'].toString().replace(/\\n/g, '\n') : "");
-        
-        // Set choices text and reset opacity
-        for (let i = 1; i <= 8; i++) {
-            let choiceText = thisTrial[`choice${i}`];
-            choiceText = choiceText ? choiceText.toString().replace(/\\n/g, '\n') : "";
-            
-            opt_texts[i-1].setText(choiceText);
-            opt_boxes[i-1].setOpacity(1.0); // Resetting opacity
-            opt_boxes[i-1].setFillColor(new util.Color('white'));
-        }
-        
-        psychoJS.experiment.addData('block', blockName);
-        return Scheduler.Event.NEXT;
-    }
+        // Set question text
+        mainQ.setText(thisTrial['QUESTION'] ? thisTrial['QUESTION'].toString().replace(/\\n/g, '\n') : "");
+        
+        // Set choices text
+        for (let i = 1; i <= 8; i++) {
+            let choiceText = thisTrial[`choice${i}`];
+            choiceText = choiceText ? choiceText.toString().replace(/\\n/g, '\n') : "";
+            
+            opt_texts[i-1].setText(choiceText);
+            opt_boxes[i-1].setFillColor(new util.Color('white'));
+        }
+        
+        psychoJS.experiment.addData('block', blockName);
+        return Scheduler.Event.NEXT;
+    }
 }
 
 function routineFrame(thisTrial, blockName) {
-    return async function () {
-        mainImage.setAutoDraw(true); 
-        mainQ.setAutoDraw(true); 
-        progressBox.setAutoDraw(true); 
-        progressBar.setAutoDraw(true);
-        opt_boxes.forEach(b => b.setAutoDraw(true)); 
-        opt_texts.forEach(t => t.setAutoDraw(true));
-        
-        // --- UX: THE INFALLIBLE HOVER EFFECT (OPACITY BASED) ---
-        for (let i = 0; i < 8; i++) {
-            if (opt_boxes[i].contains(mouse)) {
-                // Dim the box slightly when hovered to create an elegant interaction
-                opt_boxes[i].setOpacity(0.6);
-            } else {
-                // Solid white when not hovered
-                opt_boxes[i].setOpacity(1.0);
-            }
-        }
+    return async function () {
+        mainImage.setAutoDraw(true); 
+        mainQ.setAutoDraw(true); 
+        progressBox.setAutoDraw(true); 
+        progressBar.setAutoDraw(true);
+        opt_boxes.forEach(b => b.setAutoDraw(true)); 
+        opt_texts.forEach(t => t.setAutoDraw(true));
+        
+        if (mouse.getPressed()[0] === 0) window.mouseWasReleased = true;
+        
+        if (mouse.getPressed()[0] === 1 && window.mouseWasReleased) {
+            for (let i = 0; i < 8; i++) {
+                if (opt_boxes[i].contains(mouse)) {
+                    
+                    let givenResponse = i + 1; 
+                    let correctAnswer = parseInt(thisTrial['ANSWER']);
+                    let isCorrect = (givenResponse === correctAnswer) ? 1 : 0;
+                    
+                    scores.TOTAL += isCorrect;
+                    if (scores[blockName] !== undefined) {
+                        scores[blockName] += isCorrect;
+                    }
 
-        if (mouse.getPressed()[0] === 0) window.mouseWasReleased = true;
-        
-        if (mouse.getPressed()[0] === 1 && window.mouseWasReleased) {
-            for (let i = 0; i < 8; i++) {
-                if (opt_boxes[i].contains(mouse)) {
-                    
-                    let givenResponse = i + 1; 
-                    let correctAnswer = parseInt(thisTrial['ANSWER']);
-                    let isCorrect = (givenResponse === correctAnswer) ? 1 : 0;
-                    
-                    scores.TOTAL += isCorrect;
-                    if (scores[blockName] !== undefined) {
-                        scores[blockName] += isCorrect;
-                    }
+                    psychoJS.experiment.addData('response', givenResponse);
+                    psychoJS.experiment.addData('rt', routineClock.getTime());
+                    psychoJS.experiment.addData('is_correct', isCorrect);
 
-                    psychoJS.experiment.addData('response', givenResponse);
-                    psychoJS.experiment.addData('rt', routineClock.getTime());
-                    psychoJS.experiment.addData('is_correct', isCorrect);
-
-                    psychoJS.experiment.nextEntry();
-                    return Scheduler.Event.NEXT;
-                }
-            }
-        }
-        return Scheduler.Event.FLIP_REPEAT;
-    };
+                    psychoJS.experiment.nextEntry();
+                    return Scheduler.Event.NEXT;
+                }
+            }
+        }
+        return Scheduler.Event.FLIP_REPEAT;
+    };
 }
 
 function routineEnd() {
-    return async function () {
-        [mainImage, mainQ, progressBox, progressBar, ...opt_boxes, ...opt_texts].forEach(s => s.setAutoDraw(false));
-        return Scheduler.Event.NEXT;
-    }
+    return async function () {
+        [mainImage, mainQ, progressBox, progressBar, ...opt_boxes, ...opt_texts].forEach(s => s.setAutoDraw(false));
+        return Scheduler.Event.NEXT;
+    }
 }
 
 async function quitPsychoJS() {
-    // CREATE THE FINAL SUMMARY ROW
-    psychoJS.experiment.addData('block', 'FINAL_SUMMARY');
-    psychoJS.experiment.addData('score_TOTAL', `${scores.TOTAL}/16`);
-    psychoJS.experiment.addData('score_LN', `${scores.LN}/4`);
-    psychoJS.experiment.addData('score_VR', `${scores.VR}/4`);
-    psychoJS.experiment.addData('score_3DR', `${scores['3DR']}/4`);
-    psychoJS.experiment.addData('score_MX', `${scores.MX}/4`);
-    psychoJS.experiment.nextEntry(); 
+    // CREATE THE FINAL SUMMARY ROW
+    psychoJS.experiment.addData('block', 'FINAL_SUMMARY');
+    psychoJS.experiment.addData('score_TOTAL', `${scores.TOTAL}/16`);
+    psychoJS.experiment.addData('score_LN', `${scores.LN}/4`);
+    psychoJS.experiment.addData('score_VR', `${scores.VR}/4`);
+    psychoJS.experiment.addData('score_3DR', `${scores['3DR']}/4`);
+    psychoJS.experiment.addData('score_MX', `${scores.MX}/4`);
+    psychoJS.experiment.nextEntry(); 
 
-    psychoJS.experiment.save();
-    const csvText = psychoJS.experiment.getResultAsCsv();
+    psychoJS.experiment.save();
+    const csvText = psychoJS.experiment.getResultAsCsv();
 
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzhWBcNeQgH7hqr5pjhi9ZRNXRIc6M8xgJI8cbAHLU6YM31UcMrhNxbbVy3QgCJCBDX/exec";
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzhWBcNeQgH7hqr5pjhi9ZRNXRIc6M8xgJI8cbAHLU6YM31UcMrhNxbbVy3QgCJCBDX/exec";
 
-    const iframe = document.createElement('iframe');
-    iframe.name = 'hidden_iframe';
-    iframe.style.display = 'none';
-    document.body.appendChild(iframe);
+    const iframe = document.createElement('iframe');
+    iframe.name = 'hidden_iframe';
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
 
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = GOOGLE_SCRIPT_URL;
-    form.target = 'hidden_iframe'; 
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = GOOGLE_SCRIPT_URL;
+    form.target = 'hidden_iframe'; 
 
-    const filenameInput = document.createElement('input');
-    filenameInput.type = 'hidden';
-    filenameInput.name = 'filename';
-    filenameInput.value = `${psychoJS.experiment.dataFileName}.csv`;
-    form.appendChild(filenameInput);
+    const filenameInput = document.createElement('input');
+    filenameInput.type = 'hidden';
+    filenameInput.name = 'filename';
+    filenameInput.value = `${psychoJS.experiment.dataFileName}.csv`;
+    form.appendChild(filenameInput);
 
-    const dataInput = document.createElement('input');
-    dataInput.type = 'hidden';
-    dataInput.name = 'data';
-    dataInput.value = csvText;
-    form.appendChild(dataInput);
+    const dataInput = document.createElement('input');
+    dataInput.type = 'hidden';
+    dataInput.name = 'data';
+    dataInput.value = csvText;
+    form.appendChild(dataInput);
 
-    document.body.appendChild(form);
-    form.submit();
+    document.body.appendChild(form);
+    form.submit();
 
-    setTimeout(() => {
-        psychoJS.window.close();
-        psychoJS.quit();
-    }, 3000);
+    setTimeout(() => {
+        psychoJS.window.close();
+        psychoJS.quit();
+    }, 3000);
 
-    return Scheduler.Event.QUIT;
+    return Scheduler.Event.QUIT;
 }
 
 function trialsLoopEnd() { return Scheduler.Event.NEXT; }
