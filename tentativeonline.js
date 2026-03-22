@@ -1,7 +1,7 @@
 /********************************************************
- * Tentativeonline - EXACT SNAPSHOT RECOVERY
+ * ICAR16 - FINAL VERSION
  * PhD Research Data Collection
- * Features: 16 Randomized Items, Exact Requested Dimensions
+ * Features: 16 Randomized Items, Exact Snapshot Dimensions
  ********************************************************/
 
 import { core, data, sound, util, visual, hardware } from './lib/psychojs-2026.1.1.js';
@@ -9,7 +9,8 @@ const { PsychoJS } = core;
 const { TrialHandler } = data;
 const { Scheduler } = util;
 
-let expName = 'tentativeonline';
+// --- 🚨 MODIFICA QUI IL TITOLO DELLA FINESTRA 🚨 ---
+let expName = 'ICAR16'; 
 let expInfo = {'participant': ''};
 
 // Initialize PsychoJS
@@ -23,7 +24,7 @@ psychoJS.openWindow({
     waitBlanking: true
 });
 
-// Schedule dialog box
+// Schedule dialog box (The title will now be ICAR16)
 psychoJS.schedule(psychoJS.gui.DlgFromDict({
     dictionary: expInfo,
     title: expName
@@ -56,9 +57,7 @@ for (const block of blocks) {
 // Add quit routine
 flowScheduler.add(quitPsychoJS);
 
-// ========================================================================
-// RESOURCES MANAGEMENT
-// ========================================================================
+// --- RESOURCES MANAGEMENT ---
 let resources = [
     { name: 'conditions_LN.csv', path: './resources/conditions_LN.csv' },
     { name: 'conditions_VR.csv', path: './resources/conditions_VR.csv' },
@@ -88,7 +87,7 @@ async function updateInfo() {
 var routineClock, mainImage, mainQ, mouse, progressBar, progressBox;
 var opt_texts = [], opt_boxes = [];
 
-// STRICTLY 16 RANDOMIZED TRIALS (4 PER BLOCK)
+// 16 RANDOMIZED TRIALS (4 PER BLOCK)
 var totalQuestions = 16, currentQuestionIdx = 0; 
 
 var scores = {
@@ -138,7 +137,6 @@ function trialsLoopBegin(scheduler, fileName, blockName) {
         let allConditions = TrialHandler.importConditions(psychoJS.serverManager, fileName);
         util.shuffle(allConditions);
         
-        // SLICE TO 4 ITEMS PER BLOCK
         let trials = new TrialHandler({ 
             psychoJS, 
             nReps: 1, 
@@ -187,13 +185,12 @@ function routineBegin(thisTrial, blockName) {
             mainImage.setImage(img); 
             mainImage.setOpacity(1.0); 
             
-            // EXACT DIMENSIONS FROM YOUR SCREENSHOTS
             if (blockName === '3DR') {
                 mainImage.setPos([0, 0.10]);  
-                mainImage.setSize([1.20, 0.32]); // Wide and tall enough to prevent squishing
+                mainImage.setSize([1.20, 0.32]); 
             } else if (blockName === 'MX') {
                 mainImage.setPos([0, 0.16]); 
-                mainImage.setSize([0.45, 0.45]); // Perfect square safely distanced from text
+                mainImage.setSize([0.45, 0.45]); 
             } else {
                 mainImage.setPos([0, 0.10]);
                 mainImage.setSize([0.60, 0.30]);
@@ -207,7 +204,7 @@ function routineBegin(thisTrial, blockName) {
             
             mainQ.setPos([0, 0.15]);
             mainQ.setHeight(0.045);
-            mainQ.setWrapWidth(0.85); // Safe margins for LN/VR
+            mainQ.setWrapWidth(0.85); 
         }
 
         mainQ.setText(thisTrial['QUESTION'] ? thisTrial['QUESTION'].toString().replace(/\\n/g, '\n') : "");
