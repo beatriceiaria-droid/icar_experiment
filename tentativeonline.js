@@ -1,7 +1,7 @@
 /********************************************************
  * Tentativeonline - FINAL UI/UX POLISH & SCORING
  * PhD Research Data Collection
- * Features: Block-specific Aspect Ratios (3DR vs MX), Huge Text Margins
+ * Features: Corrected Aspect Ratios (Un-stretched MX/3DR), Sharp Interpolation
  ********************************************************/
 
 import { core, data, sound, util, visual, hardware } from './lib/psychojs-2026.1.1.js';
@@ -191,15 +191,15 @@ function routineBegin(thisTrial, blockName) {
             mainImage.setImage(img); 
             mainImage.setOpacity(1.0); 
             
-            // BLOCK-SPECIFIC IMAGE SIZING
+            // CORRECTED ASPECT RATIOS
             if (blockName === '3DR') {
-                // 3DR: Very wide image (row of cubes). Respect aspect ratio!
+                // 3DR: Strip of cubes. Adjusted to avoid vertical stretching and blurry edges
                 mainImage.setPos([0, 0.10]);  
-                mainImage.setSize([1.20, 0.32]); // Wide but not too tall
+                mainImage.setSize([1.00, 0.28]); 
             } else if (blockName === 'MX') {
-                // MX: Square/grid image. Make it huge and push it up.
-                mainImage.setPos([0, 0.16]); // Shifted UP closer to the text
-                mainImage.setSize([0.70, 0.55]); // Taller and proportionally wider
+                // MX: More square-like. Reduced width to stop horizontal stretching
+                mainImage.setPos([0, 0.16]); 
+                mainImage.setSize([0.55, 0.45]); // Taller and more compact horizontally
             } else {
                 // Fallback
                 mainImage.setPos([0, 0.12]);
@@ -218,7 +218,7 @@ function routineBegin(thisTrial, blockName) {
             mainQ.setPos([0, 0.15]);
             mainQ.setHeight(0.045);
             
-            // MASSIVE MARGINS: Reduced wrapWidth to 0.65 (forces text away from edges)
+            // HUGE MARGINS
             mainQ.setWrapWidth(0.65); 
         }
 
