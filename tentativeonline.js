@@ -1,7 +1,7 @@
 /********************************************************
  * Tentativeonline - FINAL UI/UX POLISH & SCORING
  * PhD Research Data Collection
- * Features: Fixed Overlaps, Safe Aspect Ratios, Strict Margins
+ * Features: True 16:9 Aspect Ratio Fixes, Readable Text Wrap
  ********************************************************/
 
 import { core, data, sound, util, visual, hardware } from './lib/psychojs-2026.1.1.js';
@@ -101,7 +101,7 @@ var scores = {
 async function experimentInit() {
     routineClock = new util.Clock();
     
-    // UI: Main Image (Interpolate set to true for better resolution scaling)
+    // UI: Main Image
     mainImage = new visual.ImageStim({ 
         win: psychoJS.window, 
         pos: [0, 0.15], 
@@ -192,13 +192,13 @@ function routineBegin(thisTrial, blockName) {
             mainImage.setOpacity(1.0); 
             
             if (blockName === '3DR') {
-                // 3DR: Safe, natural rectangle
+                // 3DR: Long strip, proper aspect ratio
                 mainImage.setPos([0, 0.05]);  
-                mainImage.setSize([0.80, 0.25]); 
+                mainImage.setSize([1.20, 0.25]); 
             } else if (blockName === 'MX') {
-                // MX: Smaller square, lowered to avoid text overlap
+                // MX: Big visible square
                 mainImage.setPos([0, 0.05]); 
-                mainImage.setSize([0.45, 0.35]); 
+                mainImage.setSize([0.60, 0.60]); 
             } else {
                 mainImage.setPos([0, 0.05]);
                 mainImage.setSize([0.60, 0.30]);
@@ -207,17 +207,17 @@ function routineBegin(thisTrial, blockName) {
             // Text safely anchored at the top
             mainQ.setPos([0, 0.40]);
             mainQ.setHeight(0.026);
-            mainQ.setWrapWidth(1.2); 
+            mainQ.setWrapWidth(1.4); 
         } else { 
             // Phase without images (LN, VR)
             mainImage.setOpacity(0.0); 
             
             // Text centered
-            mainQ.setPos([0, 0.10]);
+            mainQ.setPos([0, 0.15]);
             mainQ.setHeight(0.038);
             
-            // STRICT MARGINS: wrapWidth 0.55 forces huge margins on both sides
-            mainQ.setWrapWidth(0.55); 
+            // PERFECT MARGINS for 16:9 screens
+            mainQ.setWrapWidth(1.2); 
         }
 
         // Set question text
