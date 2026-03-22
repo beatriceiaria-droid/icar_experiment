@@ -1,7 +1,7 @@
 /********************************************************
- * Tentativeonline - FINAL GOOGLE DRIVE VERSION + SCORING
+ * Tentativeonline - FINAL UI/UX POLISH
  * PhD Research Data Collection
- * Features: True Async Iterator, Clean Summary Row, Drive Sync
+ * Features: Dynamic Text Size, Option Line-breaks, High-Res Interpolation
  ********************************************************/
 
 import { core, data, sound, util, visual, hardware } from './lib/psychojs-2026.1.1.js';
@@ -89,7 +89,7 @@ var routineClock, mainImage, mainQ, mouse, progressBar, progressBox;
 var opt_texts = [], opt_boxes = [];
 var totalQuestions = 16, currentQuestionIdx = 0;
 
-// Scoring trackers (Values kept in background)
+// Scoring trackers
 var scores = {
     TOTAL: 0,
     LN: 0,
@@ -101,15 +101,29 @@ var scores = {
 async function experimentInit() {
     routineClock = new util.Clock();
     
-    // Main stimuli
-    mainImage = new visual.ImageStim({ win: psychoJS.window, pos: [0, 0.15], size: [0.55, 0.4] });
-    mainQ = new visual.TextStim({ win: psychoJS.window, font: 'Hiragino Kaku Gothic Pro', pos: [0, 0.42], height: 0.028, color: new util.Color('white'), wrapWidth: 0.9 });
+    // UI: Main Image (Interpolate set to true for better resolution scaling)
+    mainImage = new visual.ImageStim({ 
+        win: psychoJS.window, 
+        pos: [0, 0.15], 
+        size: [0.55, 0.4],
+        interpolate: true 
+    });
     
-    // Progress bar
+    // UI: Main Question
+    mainQ = new visual.TextStim({ 
+        win: psychoJS.window, 
+        font: 'Hiragino Kaku Gothic Pro', 
+        pos: [0, 0.42], 
+        height: 0.028, 
+        color: new util.Color('white'), 
+        wrapWidth: 0.9 
+    });
+    
+    // UI: Progress bar
     progressBox = new visual.Rect({ win: psychoJS.window, width: 0.8, height: 0.01, pos: [0, -0.48], lineColor: new util.Color('grey') });
     progressBar = new visual.Rect({ win: psychoJS.window, width: 0, height: 0.01, pos: [-0.4, -0.48], fillColor: new util.Color('white') });
     
-    // Option bounding boxes and text
+    // UI: Option bounding boxes and text
     const x_pos = [-0.48, -0.16, 0.16, 0.48, -0.48, -0.16, 0.16, 0.48];
     const y_pos = [-0.22, -0.22, -0.22, -0.22, -0.35, -0.35, -0.35, -0.35];
     
@@ -172,21 +186,35 @@ function routineBegin(thisTrial, blockName) {
         progressBar.setWidth((currentQuestionIdx / totalQuestions) * 0.8);
         progressBar.setPos([-0.4 + (progressBar.getWidth()/2), -0.48]);
         
-        // Set image stimulus
+        // --- DYNAMIC UI ADJUSTMENT ---
         const img = thisTrial['image_file'];
+        
         if (img && !img.includes('blank')) { 
+            // Phase with images (3DR, MX)
             mainImage.setImage(img); 
             mainImage.setOpacity(1.0); 
+            
+            // Push text up and make it standard size
+            mainQ.setPos([0, 0.42]);
+            mainQ.setHeight(0.028);
         } else { 
+            // Phase without images (LN, VR)
             mainImage.setOpacity(0.0); 
+            
+            // Move text to the center and make it larger
+            mainQ.setPos([0, 0.15]);
+            mainQ.setHeight(0.045);
         }
 
-        // Set question text
+        // Set question text (handling line breaks)
         mainQ.setText(thisTrial['QUESTION'] ? thisTrial['QUESTION'].toString().replace(/\\n/g, '\n') : "");
         
-        // Set choices text
+        // Set choices text (handling line breaks for options too)
         for (let i = 1; i <= 8; i++) {
-            opt_texts[i-1].setText(thisTrial[`choice${i}`] || "");
+            let choiceText = thisTrial[`choice${i}`];
+            choiceText = choiceText ? choiceText.toString().replace(/\\n/g, '\n') : "";
+            
+            opt_texts[i-1].setText(choiceText);
             opt_boxes[i-1].setFillColor(new util.Color('white'));
         }
         
@@ -221,7 +249,7 @@ function routineFrame(thisTrial, blockName) {
                         scores[blockName] += isCorrect;
                     }
 
-                    // Log basic trial data (0 or 1 for this specific question)
+                    // Log basic trial data
                     psychoJS.experiment.addData('response', givenResponse);
                     psychoJS.experiment.addData('rt', routineClock.getTime());
                     psychoJS.experiment.addData('is_correct', isCorrect);
