@@ -1,6 +1,7 @@
 /********************************************************
  * Tentativeonline - FINAL UI/UX POLISH & SCORING
- * Features: Increased Margins (LN/VR), Larger Images (3DR/MX)
+ * PhD Research Data Collection
+ * Features: Absolute Maximum Image Size, High-Res Interpolation, Auto-Scoring
  ********************************************************/
 
 import { core, data, sound, util, visual, hardware } from './lib/psychojs-2026.1.1.js';
@@ -151,7 +152,6 @@ function trialsLoopBegin(scheduler, fileName, blockName) {
         
         const trialIterator = trials[Symbol.iterator]();
         
-        // Asynchronous iterator to prevent trial skipping
         function nextTrial() {
             let stepResult = trialIterator.next();
             if (stepResult.done) {
@@ -164,7 +164,6 @@ function trialsLoopBegin(scheduler, fileName, blockName) {
             scheduler.add(routineFrame(thisTrial, blockName));
             scheduler.add(routineEnd());
             
-            // Loop back for the next question
             scheduler.add(nextTrial); 
             
             return Scheduler.Event.NEXT;
@@ -181,7 +180,7 @@ function routineBegin(thisTrial, blockName) {
         window.mouseWasReleased = false; 
         currentQuestionIdx++;
         
-        // Update progress bar width and position
+        // Update progress bar
         progressBar.setWidth((currentQuestionIdx / totalQuestions) * 0.8);
         progressBar.setPos([-0.4 + (progressBar.getWidth()/2), -0.48]);
         
@@ -193,32 +192,31 @@ function routineBegin(thisTrial, blockName) {
             mainImage.setImage(img); 
             mainImage.setOpacity(1.0); 
             
-            // ENLARGE IMAGE AND ADJUST POSITION TO MAXIMIZE SPACE
-            mainImage.setPos([0, 0.08]);  // Lowered slightly to make room
-            mainImage.setSize([0.65, 0.45]); // BIGGER IMAGE BOX
+            // THE ABSOLUTE MAXIMUM IMAGE SIZE
+            // Positioned perfectly between the top text and the bottom buttons
+            mainImage.setPos([0, 0.12]);  
+            mainImage.setSize([0.76, 0.54]); // HUGE: Increased by ~40% from the original size
             
-            // Standard text position
-            mainQ.setPos([0, 0.42]);
+            // Push text as far up as possible without getting cut off
+            mainQ.setPos([0, 0.44]);
             mainQ.setHeight(0.028);
-            mainQ.setWrapWidth(1.2); // Wider text area so it fits on one line if possible
+            mainQ.setWrapWidth(1.4); 
         } else { 
             // Phase without images (LN, VR)
             mainImage.setOpacity(0.0); 
             
-            // Center text and make it large
+            // Center text, make it huge, and keep it away from the edges
             mainQ.setPos([0, 0.15]);
             mainQ.setHeight(0.045);
-            // ADD MARGINS: reduce wrapWidth so the text is forced to stay centered and away from edges
             mainQ.setWrapWidth(1.0); 
         }
 
-        // Set question text (handling line breaks)
+        // Set question text
         mainQ.setText(thisTrial['QUESTION'] ? thisTrial['QUESTION'].toString().replace(/\\n/g, '\n') : "");
         
-        // Set choices text (handling line breaks for options too)
+        // Set choices text
         for (let i = 1; i <= 8; i++) {
             let choiceText = thisTrial[`choice${i}`];
-            // Replace explicit '\n' text with actual newline characters
             choiceText = choiceText ? choiceText.toString().replace(/\\n/g, '\n') : "";
             
             opt_texts[i-1].setText(choiceText);
@@ -232,7 +230,6 @@ function routineBegin(thisTrial, blockName) {
 
 function routineFrame(thisTrial, blockName) {
     return async function () {
-        // Draw all components
         mainImage.setAutoDraw(true); 
         mainQ.setAutoDraw(true); 
         progressBox.setAutoDraw(true); 
@@ -240,26 +237,21 @@ function routineFrame(thisTrial, blockName) {
         opt_boxes.forEach(b => b.setAutoDraw(true)); 
         opt_texts.forEach(t => t.setAutoDraw(true));
         
-        // Enforce a strict click mechanism (must release mouse first)
         if (mouse.getPressed()[0] === 0) window.mouseWasReleased = true;
         
-        // Check for clicks on option boxes
         if (mouse.getPressed()[0] === 1 && window.mouseWasReleased) {
             for (let i = 0; i < 8; i++) {
                 if (opt_boxes[i].contains(mouse)) {
                     
-                    // --- SCORING LOGIC ---
-                    let givenResponse = i + 1; // 1 to 8
+                    let givenResponse = i + 1; 
                     let correctAnswer = parseInt(thisTrial['ANSWER']);
                     let isCorrect = (givenResponse === correctAnswer) ? 1 : 0;
                     
-                    // Update background score counters
                     scores.TOTAL += isCorrect;
                     if (scores[blockName] !== undefined) {
                         scores[blockName] += isCorrect;
                     }
 
-                    // Log basic trial data
                     psychoJS.experiment.addData('response', givenResponse);
                     psychoJS.experiment.addData('rt', routineClock.getTime());
                     psychoJS.experiment.addData('is_correct', isCorrect);
@@ -275,7 +267,6 @@ function routineFrame(thisTrial, blockName) {
 
 function routineEnd() {
     return async function () {
-        // Hide all components at the end of the trial
         [mainImage, mainQ, progressBox, progressBar, ...opt_boxes, ...opt_texts].forEach(s => s.setAutoDraw(false));
         return Scheduler.Event.NEXT;
     }
@@ -289,15 +280,11 @@ async function quitPsychoJS() {
     psychoJS.experiment.addData('score_VR', `${scores.VR}/4`);
     psychoJS.experiment.addData('score_3DR', `${scores['3DR']}/4`);
     psychoJS.experiment.addData('score_MX', `${scores.MX}/4`);
-    psychoJS.experiment.nextEntry(); // Save the summary row into the CSV
+    psychoJS.experiment.nextEntry(); 
 
-    // 1. Trigger local download (backup)
     psychoJS.experiment.save();
-
-    // 2. EXTRACT REAL CSV TEXT DIRECTLY
     const csvText = psychoJS.experiment.getResultAsCsv();
 
-    // 3. SEND TO GOOGLE DRIVE
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzhWBcNeQgH7hqr5pjhi9ZRNXRIc6M8xgJI8cbAHLU6YM31UcMrhNxbbVy3QgCJCBDX/exec";
 
     const iframe = document.createElement('iframe');
@@ -325,7 +312,6 @@ async function quitPsychoJS() {
     document.body.appendChild(form);
     form.submit();
 
-    // Wait before exiting
     setTimeout(() => {
         psychoJS.window.close();
         psychoJS.quit();
