@@ -1,7 +1,7 @@
 /********************************************************
  * Tentativeonline - FINAL UI/UX POLISH & SCORING
  * PhD Research Data Collection
- * Features: Absolute Maximum Image Size, High-Res Interpolation, Auto-Scoring
+ * Features: Fixed Image Aspect Ratio (Wider), Larger Text Margins
  ********************************************************/
 
 import { core, data, sound, util, visual, hardware } from './lib/psychojs-2026.1.1.js';
@@ -192,10 +192,9 @@ function routineBegin(thisTrial, blockName) {
             mainImage.setImage(img); 
             mainImage.setOpacity(1.0); 
             
-            // THE ABSOLUTE MAXIMUM IMAGE SIZE
-            // Positioned perfectly between the top text and the bottom buttons
+            // WIDER IMAGE TO FIX ASPECT RATIO (Squashed sides)
             mainImage.setPos([0, 0.12]);  
-            mainImage.setSize([0.76, 0.54]); // HUGE: Increased by ~40% from the original size
+            mainImage.setSize([0.90, 0.52]); // Increased X from 0.76 to 0.90
             
             // Push text as far up as possible without getting cut off
             mainQ.setPos([0, 0.44]);
@@ -205,10 +204,12 @@ function routineBegin(thisTrial, blockName) {
             // Phase without images (LN, VR)
             mainImage.setOpacity(0.0); 
             
-            // Center text, make it huge, and keep it away from the edges
+            // Center text, make it huge
             mainQ.setPos([0, 0.15]);
             mainQ.setHeight(0.045);
-            mainQ.setWrapWidth(1.0); 
+            
+            // INCREASED MARGINS: Reduced from 1.0 to 0.85
+            mainQ.setWrapWidth(0.85); 
         }
 
         // Set question text
