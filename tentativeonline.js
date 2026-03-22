@@ -1,7 +1,7 @@
 /********************************************************
- * Tentativeonline - FINAL CORRECTION
+ * Tentativeonline - EXACT SNAPSHOT RECOVERY
  * PhD Research Data Collection
- * Features: 16 Random Trials Restored, Images slightly raised
+ * Features: 16 Randomized Items, Exact Requested Dimensions
  ********************************************************/
 
 import { core, data, sound, util, visual, hardware } from './lib/psychojs-2026.1.1.js';
@@ -57,7 +57,7 @@ for (const block of blocks) {
 flowScheduler.add(quitPsychoJS);
 
 // ========================================================================
-// CARICAMENTO IMMAGINI
+// RESOURCES MANAGEMENT
 // ========================================================================
 let resources = [
     { name: 'conditions_LN.csv', path: './resources/conditions_LN.csv' },
@@ -88,7 +88,7 @@ async function updateInfo() {
 var routineClock, mainImage, mainQ, mouse, progressBar, progressBox;
 var opt_texts = [], opt_boxes = [];
 
-// 16 DOMANDE TOTALI (4 per categoria)
+// STRICTLY 16 RANDOMIZED TRIALS (4 PER BLOCK)
 var totalQuestions = 16, currentQuestionIdx = 0; 
 
 var scores = {
@@ -138,6 +138,7 @@ function trialsLoopBegin(scheduler, fileName, blockName) {
         let allConditions = TrialHandler.importConditions(psychoJS.serverManager, fileName);
         util.shuffle(allConditions);
         
+        // SLICE TO 4 ITEMS PER BLOCK
         let trials = new TrialHandler({ 
             psychoJS, 
             nReps: 1, 
@@ -186,28 +187,27 @@ function routineBegin(thisTrial, blockName) {
             mainImage.setImage(img); 
             mainImage.setOpacity(1.0); 
             
+            // EXACT DIMENSIONS FROM YOUR SCREENSHOTS
             if (blockName === '3DR') {
-                // IMMAGINE ALZATA A 0.10
                 mainImage.setPos([0, 0.10]);  
-                mainImage.setSize([0.85, 0.45]); 
+                mainImage.setSize([1.20, 0.32]); // Wide and tall enough to prevent squishing
             } else if (blockName === 'MX') {
-                // IMMAGINE ALZATA A 0.13
-                mainImage.setPos([0, 0.13]); 
-                mainImage.setSize([0.55, 0.48]); 
+                mainImage.setPos([0, 0.16]); 
+                mainImage.setSize([0.45, 0.45]); // Perfect square safely distanced from text
             } else {
                 mainImage.setPos([0, 0.10]);
                 mainImage.setSize([0.60, 0.30]);
             }
             
-            mainQ.setPos([0, 0.44]);
+            mainQ.setPos([0, 0.43]);
             mainQ.setHeight(0.028);
-            mainQ.setWrapWidth(1.2); 
+            mainQ.setWrapWidth(1.4); 
         } else { 
             mainImage.setOpacity(0.0); 
             
             mainQ.setPos([0, 0.15]);
-            mainQ.setHeight(0.040);
-            mainQ.setWrapWidth(0.90); 
+            mainQ.setHeight(0.045);
+            mainQ.setWrapWidth(0.85); // Safe margins for LN/VR
         }
 
         mainQ.setText(thisTrial['QUESTION'] ? thisTrial['QUESTION'].toString().replace(/\\n/g, '\n') : "");
