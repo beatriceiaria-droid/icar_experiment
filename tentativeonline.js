@@ -1,7 +1,7 @@
 /********************************************************
  * Tentativeonline - FINAL UI/UX POLISH & SCORING
  * PhD Research Data Collection
- * Features: Corrected Aspect Ratios (Un-stretched MX/3DR), Sharp Interpolation
+ * Features: Extreme Aspect Ratio Fixes, Cache-busting prep
  ********************************************************/
 
 import { core, data, sound, util, visual, hardware } from './lib/psychojs-2026.1.1.js';
@@ -191,23 +191,22 @@ function routineBegin(thisTrial, blockName) {
             mainImage.setImage(img); 
             mainImage.setOpacity(1.0); 
             
-            // CORRECTED ASPECT RATIOS
+            // EXTREME ASPECT RATIOS TO FORCE VISUAL CHANGE
             if (blockName === '3DR') {
-                // 3DR: Strip of cubes. Adjusted to avoid vertical stretching and blurry edges
+                // 3DR: Extremely wide, shorter height to stop vertical squishing
                 mainImage.setPos([0, 0.10]);  
-                mainImage.setSize([1.00, 0.28]); 
+                mainImage.setSize([1.30, 0.25]); 
             } else if (blockName === 'MX') {
-                // MX: More square-like. Reduced width to stop horizontal stretching
-                mainImage.setPos([0, 0.16]); 
-                mainImage.setSize([0.55, 0.45]); // Taller and more compact horizontally
+                // MX: A perfect visual square, pushed very close to the text
+                mainImage.setPos([0, 0.18]); 
+                mainImage.setSize([0.50, 0.50]); 
             } else {
-                // Fallback
                 mainImage.setPos([0, 0.12]);
                 mainImage.setSize([0.80, 0.40]);
             }
             
             // Push text up for image trials
-            mainQ.setPos([0, 0.43]);
+            mainQ.setPos([0, 0.44]);
             mainQ.setHeight(0.028);
             mainQ.setWrapWidth(1.4); 
         } else { 
@@ -218,8 +217,8 @@ function routineBegin(thisTrial, blockName) {
             mainQ.setPos([0, 0.15]);
             mainQ.setHeight(0.045);
             
-            // HUGE MARGINS
-            mainQ.setWrapWidth(0.65); 
+            // EXTREME MARGINS: Reduced wrapWidth to 0.55
+            mainQ.setWrapWidth(0.55); 
         }
 
         // Set question text
