@@ -1,6 +1,6 @@
 /********************************************************
  * Tentativeonline - FINAL UI/UX POLISH & SCORING
- * Features: Dynamic Layout, Text-to-Box Linebreaks, High-Res Interpolation, Auto-Scoring, Drive Sync
+ * Features: Increased Margins (LN/VR), Larger Images (3DR/MX)
  ********************************************************/
 
 import { core, data, sound, util, visual, hardware } from './lib/psychojs-2026.1.1.js';
@@ -193,9 +193,14 @@ function routineBegin(thisTrial, blockName) {
             mainImage.setImage(img); 
             mainImage.setOpacity(1.0); 
             
-            // Standard text position and size
+            // ENLARGE IMAGE AND ADJUST POSITION TO MAXIMIZE SPACE
+            mainImage.setPos([0, 0.08]);  // Lowered slightly to make room
+            mainImage.setSize([0.65, 0.45]); // BIGGER IMAGE BOX
+            
+            // Standard text position
             mainQ.setPos([0, 0.42]);
             mainQ.setHeight(0.028);
+            mainQ.setWrapWidth(1.2); // Wider text area so it fits on one line if possible
         } else { 
             // Phase without images (LN, VR)
             mainImage.setOpacity(0.0); 
@@ -203,6 +208,8 @@ function routineBegin(thisTrial, blockName) {
             // Center text and make it large
             mainQ.setPos([0, 0.15]);
             mainQ.setHeight(0.045);
+            // ADD MARGINS: reduce wrapWidth so the text is forced to stay centered and away from edges
+            mainQ.setWrapWidth(1.0); 
         }
 
         // Set question text (handling line breaks)
