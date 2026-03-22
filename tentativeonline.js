@@ -1,7 +1,7 @@
 /********************************************************
  * Tentativeonline - FINAL UI/UX POLISH & SCORING
  * PhD Research Data Collection
- * Features: Block-specific Aspect Ratios (3DR vs MX), Huge Text Margins
+ * Features: Perfect Square/Strip Aspect Ratios, Mouse Hover Effect
  ********************************************************/
 
 import { core, data, sound, util, visual, hardware } from './lib/psychojs-2026.1.1.js';
@@ -191,17 +191,16 @@ function routineBegin(thisTrial, blockName) {
             mainImage.setImage(img); 
             mainImage.setOpacity(1.0); 
             
-            // BLOCK-SPECIFIC IMAGE SIZING
+            // EXACT MATHEMATICAL SIZING (Units: 'height')
             if (blockName === '3DR') {
-                // 3DR: Very wide image (row of cubes). Respect aspect ratio!
                 mainImage.setPos([0, 0.10]);  
-                mainImage.setSize([1.20, 0.32]); // Wide but not too tall
+                // Wide strip. Width is 1.20x screen height, Height is 0.20x screen height.
+                mainImage.setSize([1.20, 0.20]); 
             } else if (blockName === 'MX') {
-                // MX: Square/grid image. Make it huge and push it up.
-                mainImage.setPos([0, 0.16]); // Shifted UP closer to the text
-                mainImage.setSize([0.70, 0.55]); // Taller and proportionally wider
+                mainImage.setPos([0, 0.16]); 
+                // Perfect square on screen. Width and Height must be identical.
+                mainImage.setSize([0.45, 0.45]); 
             } else {
-                // Fallback
                 mainImage.setPos([0, 0.12]);
                 mainImage.setSize([0.80, 0.40]);
             }
@@ -218,7 +217,7 @@ function routineBegin(thisTrial, blockName) {
             mainQ.setPos([0, 0.15]);
             mainQ.setHeight(0.045);
             
-            // MASSIVE MARGINS: Reduced wrapWidth to 0.65 (forces text away from edges)
+            // MASSIVE MARGINS
             mainQ.setWrapWidth(0.65); 
         }
 
@@ -231,6 +230,7 @@ function routineBegin(thisTrial, blockName) {
             choiceText = choiceText ? choiceText.toString().replace(/\\n/g, '\n') : "";
             
             opt_texts[i-1].setText(choiceText);
+            // Reset colors at start of trial
             opt_boxes[i-1].setFillColor(new util.Color('white'));
         }
         
@@ -248,6 +248,18 @@ function routineFrame(thisTrial, blockName) {
         opt_boxes.forEach(b => b.setAutoDraw(true)); 
         opt_texts.forEach(t => t.setAutoDraw(true));
         
+        // --- UX: MOUSE HOVER ILLUMINATION ---
+        for (let i = 0; i < 8; i++) {
+            if (opt_boxes[i].contains(mouse)) {
+                // Change to light gray if mouse is over it
+                opt_boxes[i].setFillColor(new util.Color('#e0e0e0'));
+            } else {
+                // Keep white if mouse is not over it
+                opt_boxes[i].setFillColor(new util.Color('white'));
+            }
+        }
+
+        // Enforce strict click mechanism
         if (mouse.getPressed()[0] === 0) window.mouseWasReleased = true;
         
         if (mouse.getPressed()[0] === 1 && window.mouseWasReleased) {
