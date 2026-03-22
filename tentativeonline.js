@@ -1,7 +1,7 @@
 /********************************************************
  * Tentativeonline - FINAL UI/UX POLISH & SCORING
  * PhD Research Data Collection
- * Features: True 16:9 Aspect Ratio Fixes, Readable Text Wrap
+ * Features: Corrected Aspect Ratios (Un-stretched MX/3DR), Sharp Interpolation
  ********************************************************/
 
 import { core, data, sound, util, visual, hardware } from './lib/psychojs-2026.1.1.js';
@@ -101,7 +101,7 @@ var scores = {
 async function experimentInit() {
     routineClock = new util.Clock();
     
-    // UI: Main Image
+    // UI: Main Image (Interpolate set to true for better resolution scaling)
     mainImage = new visual.ImageStim({ 
         win: psychoJS.window, 
         pos: [0, 0.15], 
@@ -191,33 +191,35 @@ function routineBegin(thisTrial, blockName) {
             mainImage.setImage(img); 
             mainImage.setOpacity(1.0); 
             
+            // CORRECTED ASPECT RATIOS
             if (blockName === '3DR') {
-                // 3DR: Long strip, proper aspect ratio
-                mainImage.setPos([0, 0.05]);  
-                mainImage.setSize([1.20, 0.25]); 
+                // 3DR: Strip of cubes. Adjusted to avoid vertical stretching and blurry edges
+                mainImage.setPos([0, 0.10]);  
+                mainImage.setSize([1.00, 0.28]); 
             } else if (blockName === 'MX') {
-                // MX: Big visible square
-                mainImage.setPos([0, 0.05]); 
-                mainImage.setSize([0.60, 0.60]); 
+                // MX: More square-like. Reduced width to stop horizontal stretching
+                mainImage.setPos([0, 0.16]); 
+                mainImage.setSize([0.55, 0.45]); // Taller and more compact horizontally
             } else {
-                mainImage.setPos([0, 0.05]);
-                mainImage.setSize([0.60, 0.30]);
+                // Fallback
+                mainImage.setPos([0, 0.12]);
+                mainImage.setSize([0.80, 0.40]);
             }
             
-            // Text safely anchored at the top
-            mainQ.setPos([0, 0.40]);
-            mainQ.setHeight(0.026);
+            // Push text up for image trials
+            mainQ.setPos([0, 0.43]);
+            mainQ.setHeight(0.028);
             mainQ.setWrapWidth(1.4); 
         } else { 
             // Phase without images (LN, VR)
             mainImage.setOpacity(0.0); 
             
-            // Text centered
+            // Center text, make it huge
             mainQ.setPos([0, 0.15]);
-            mainQ.setHeight(0.038);
+            mainQ.setHeight(0.045);
             
-            // PERFECT MARGINS for 16:9 screens
-            mainQ.setWrapWidth(1.2); 
+            // HUGE MARGINS
+            mainQ.setWrapWidth(0.65); 
         }
 
         // Set question text
