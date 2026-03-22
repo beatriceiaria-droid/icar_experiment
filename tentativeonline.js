@@ -1,7 +1,6 @@
 /********************************************************
- * Tentativeonline - FINAL UI/UX POLISH
- * PhD Research Data Collection
- * Features: Dynamic Text Size, Option Line-breaks, High-Res Interpolation
+ * Tentativeonline - FINAL UI/UX POLISH & SCORING
+ * Features: Dynamic Layout, Text-to-Box Linebreaks, High-Res Interpolation, Auto-Scoring, Drive Sync
  ********************************************************/
 
 import { core, data, sound, util, visual, hardware } from './lib/psychojs-2026.1.1.js';
@@ -194,14 +193,14 @@ function routineBegin(thisTrial, blockName) {
             mainImage.setImage(img); 
             mainImage.setOpacity(1.0); 
             
-            // Push text up and make it standard size
+            // Standard text position and size
             mainQ.setPos([0, 0.42]);
             mainQ.setHeight(0.028);
         } else { 
             // Phase without images (LN, VR)
             mainImage.setOpacity(0.0); 
             
-            // Move text to the center and make it larger
+            // Center text and make it large
             mainQ.setPos([0, 0.15]);
             mainQ.setHeight(0.045);
         }
@@ -212,6 +211,7 @@ function routineBegin(thisTrial, blockName) {
         // Set choices text (handling line breaks for options too)
         for (let i = 1; i <= 8; i++) {
             let choiceText = thisTrial[`choice${i}`];
+            // Replace explicit '\n' text with actual newline characters
             choiceText = choiceText ? choiceText.toString().replace(/\\n/g, '\n') : "";
             
             opt_texts[i-1].setText(choiceText);
@@ -225,6 +225,7 @@ function routineBegin(thisTrial, blockName) {
 
 function routineFrame(thisTrial, blockName) {
     return async function () {
+        // Draw all components
         mainImage.setAutoDraw(true); 
         mainQ.setAutoDraw(true); 
         progressBox.setAutoDraw(true); 
@@ -232,14 +233,16 @@ function routineFrame(thisTrial, blockName) {
         opt_boxes.forEach(b => b.setAutoDraw(true)); 
         opt_texts.forEach(t => t.setAutoDraw(true));
         
+        // Enforce a strict click mechanism (must release mouse first)
         if (mouse.getPressed()[0] === 0) window.mouseWasReleased = true;
         
+        // Check for clicks on option boxes
         if (mouse.getPressed()[0] === 1 && window.mouseWasReleased) {
             for (let i = 0; i < 8; i++) {
                 if (opt_boxes[i].contains(mouse)) {
                     
-                    // Evaluate response
-                    let givenResponse = i + 1; 
+                    // --- SCORING LOGIC ---
+                    let givenResponse = i + 1; // 1 to 8
                     let correctAnswer = parseInt(thisTrial['ANSWER']);
                     let isCorrect = (givenResponse === correctAnswer) ? 1 : 0;
                     
@@ -265,6 +268,7 @@ function routineFrame(thisTrial, blockName) {
 
 function routineEnd() {
     return async function () {
+        // Hide all components at the end of the trial
         [mainImage, mainQ, progressBox, progressBar, ...opt_boxes, ...opt_texts].forEach(s => s.setAutoDraw(false));
         return Scheduler.Event.NEXT;
     }
@@ -280,10 +284,10 @@ async function quitPsychoJS() {
     psychoJS.experiment.addData('score_MX', `${scores.MX}/4`);
     psychoJS.experiment.nextEntry(); // Save the summary row into the CSV
 
-    // 1. Trigger local download
+    // 1. Trigger local download (backup)
     psychoJS.experiment.save();
 
-    // 2. Extract final CSV text
+    // 2. EXTRACT REAL CSV TEXT DIRECTLY
     const csvText = psychoJS.experiment.getResultAsCsv();
 
     // 3. SEND TO GOOGLE DRIVE
@@ -314,6 +318,7 @@ async function quitPsychoJS() {
     document.body.appendChild(form);
     form.submit();
 
+    // Wait before exiting
     setTimeout(() => {
         psychoJS.window.close();
         psychoJS.quit();
