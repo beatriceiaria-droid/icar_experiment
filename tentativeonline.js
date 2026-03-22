@@ -1,7 +1,7 @@
 /********************************************************
- * Tentativeonline - FINAL ROLLBACK & PERFECT GEOMETRY
+ * Tentativeonline - FINAL CORRECTION
  * PhD Research Data Collection
- * Features: Restored Proportions, 102 Questions, No Hover Bug
+ * Features: 16 Random Trials Restored, Specific Aspect Ratios
  ********************************************************/
 
 import { core, data, sound, util, visual, hardware } from './lib/psychojs-2026.1.1.js';
@@ -57,7 +57,7 @@ for (const block of blocks) {
 flowScheduler.add(quitPsychoJS);
 
 // ========================================================================
-// CARICAMENTO IMMAGINI (81 File in totale)
+// CARICAMENTO IMMAGINI
 // ========================================================================
 let resources = [
     { name: 'conditions_LN.csv', path: './resources/conditions_LN.csv' },
@@ -88,8 +88,8 @@ async function updateInfo() {
 var routineClock, mainImage, mainQ, mouse, progressBar, progressBox;
 var opt_texts = [], opt_boxes = [];
 
-// TUTTE LE 102 DOMANDE ATTIVATE
-var totalQuestions = 102, currentQuestionIdx = 0; 
+// RIPRISTINATE LE 16 DOMANDE TOTALI (4 per categoria)
+var totalQuestions = 16, currentQuestionIdx = 0; 
 
 var scores = {
     TOTAL: 0,
@@ -138,12 +138,12 @@ function trialsLoopBegin(scheduler, fileName, blockName) {
         let allConditions = TrialHandler.importConditions(psychoJS.serverManager, fileName);
         util.shuffle(allConditions);
         
-        // ESEGUE L'INTERO FILE CSV (102 Domande Totali)
+        // RIPRISTINATO IL CAMPIONAMENTO CASUALE DI 4 DOMANDE
         let trials = new TrialHandler({ 
             psychoJS, 
             nReps: 1, 
             method: TrialHandler.Method.SEQUENTIAL, 
-            trialList: allConditions, 
+            trialList: allConditions.slice(0, 4), 
             name: blockName 
         });
         psychoJS.experiment.addLoop(trials);
@@ -187,22 +187,20 @@ function routineBegin(thisTrial, blockName) {
             mainImage.setImage(img); 
             mainImage.setOpacity(1.0); 
             
-            // GEOMETRIA CORRETTA E DEFINITIVA
+            // MISURE CORRETTE COME DA TUE ISTRUZIONI
             if (blockName === '3DR') {
                 mainImage.setPos([0, 0.05]);  
-                // Aumentata altezza, diminuita larghezza per non schiacciare
-                mainImage.setSize([0.85, 0.35]); 
+                // AUMENTATA L'ALTEZZA
+                mainImage.setSize([0.85, 0.45]); 
             } else if (blockName === 'MX') {
-                // Alzata per non farla sparire, ma tenuta sotto al testo
                 mainImage.setPos([0, 0.08]); 
-                // Quadrato perfetto per non allargarla
-                mainImage.setSize([0.45, 0.45]); 
+                // AUMENTATA LA LARGHEZZA E LEGGERMENTE L'ALTEZZA
+                mainImage.setSize([0.55, 0.48]); 
             } else {
                 mainImage.setPos([0, 0.05]);
                 mainImage.setSize([0.60, 0.30]);
             }
             
-            // TESTO ALZATO per non sovrapporsi mai
             mainQ.setPos([0, 0.44]);
             mainQ.setHeight(0.028);
             mainQ.setWrapWidth(1.2); 
@@ -222,7 +220,7 @@ function routineBegin(thisTrial, blockName) {
             choiceText = choiceText ? choiceText.toString().replace(/\\n/g, '\n') : "";
             
             opt_texts[i-1].setText(choiceText);
-            opt_boxes[i-1].setFillColor(new util.Color('white')); // Scatole bianche fisse, niente bug
+            opt_boxes[i-1].setFillColor(new util.Color('white'));
         }
         
         psychoJS.experiment.addData('block', blockName);
@@ -276,11 +274,11 @@ function routineEnd() {
 
 async function quitPsychoJS() {
     psychoJS.experiment.addData('block', 'FINAL_SUMMARY');
-    psychoJS.experiment.addData('score_TOTAL', `${scores.TOTAL}/102`);
-    psychoJS.experiment.addData('score_LN', `${scores.LN}/9`);
-    psychoJS.experiment.addData('score_VR', `${scores.VR}/16`);
-    psychoJS.experiment.addData('score_3DR', `${scores['3DR']}/66`);
-    psychoJS.experiment.addData('score_MX', `${scores.MX}/11`);
+    psychoJS.experiment.addData('score_TOTAL', `${scores.TOTAL}/16`);
+    psychoJS.experiment.addData('score_LN', `${scores.LN}/4`);
+    psychoJS.experiment.addData('score_VR', `${scores.VR}/4`);
+    psychoJS.experiment.addData('score_3DR', `${scores['3DR']}/4`);
+    psychoJS.experiment.addData('score_MX', `${scores.MX}/4`);
     psychoJS.experiment.nextEntry(); 
 
     psychoJS.experiment.save();
