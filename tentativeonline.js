@@ -1,7 +1,7 @@
 /********************************************************
  * Tentativeonline - FINAL UI/UX POLISH & SCORING
  * PhD Research Data Collection
- * Features: Perfect Square/Strip Aspect Ratios, Mouse Hover Effect
+ * Features: True Squares (MX), Wide Strips (3DR), 102 Total Questions
  ********************************************************/
 
 import { core, data, sound, util, visual, hardware } from './lib/psychojs-2026.1.1.js';
@@ -56,7 +56,7 @@ for (const block of blocks) {
 // Add quit routine
 flowScheduler.add(quitPsychoJS);
 
-// --- RESOURCES MANAGEMENT ---
+// --- RESOURCES MANAGEMENT (Exactly 81 items to download) ---
 let resources = [
     { name: 'conditions_LN.csv', path: './resources/conditions_LN.csv' },
     { name: 'conditions_VR.csv', path: './resources/conditions_VR.csv' },
@@ -64,12 +64,12 @@ let resources = [
     { name: 'conditions_MX.csv', path: './resources/conditions_MX.csv' }
 ];
 
-// Load 3DR images
+// Load 3DR images (66 items)
 for (let i = 11001; i <= 11066; i++) {
     resources.push({ name: `images/image_3DR/fig${i}.png`, path: `./resources/images/image_3DR/fig${i}.png` });
 }
 
-// Load MX images
+// Load MX images (11 items)
 const mx_ids = [12043, 12044, 12045, 12046, 12047, 12048, 12050, 12053, 12054, 12055, 12056];
 for (let id of mx_ids) {
     resources.push({ name: `images/image_MX/fig${id}.png`, path: `./resources/images/image_MX/fig${id}.jpg` });
@@ -101,7 +101,7 @@ var scores = {
 async function experimentInit() {
     routineClock = new util.Clock();
     
-    // UI: Main Image (Interpolate set to true for better resolution scaling)
+    // UI: Main Image 
     mainImage = new visual.ImageStim({ 
         win: psychoJS.window, 
         pos: [0, 0.15], 
@@ -141,6 +141,7 @@ function trialsLoopBegin(scheduler, fileName, blockName) {
         let allConditions = TrialHandler.importConditions(psychoJS.serverManager, fileName);
         util.shuffle(allConditions);
         
+        // Define trials (we pull exactly what's needed for the 4 questions)
         let trials = new TrialHandler({ 
             psychoJS, 
             nReps: 1, 
@@ -191,34 +192,34 @@ function routineBegin(thisTrial, blockName) {
             mainImage.setImage(img); 
             mainImage.setOpacity(1.0); 
             
-            // EXACT MATHEMATICAL SIZING (Units: 'height')
+            // EXACT MATHEMATICAL PROPORTIONS (Based on units: height)
             if (blockName === '3DR') {
+                // Wide strip, keeps the cubes intact
                 mainImage.setPos([0, 0.10]);  
-                // Wide strip. Width is 1.20x screen height, Height is 0.20x screen height.
-                mainImage.setSize([1.20, 0.20]); 
+                mainImage.setSize([1.10, 0.22]); 
             } else if (blockName === 'MX') {
-                mainImage.setPos([0, 0.16]); 
-                // Perfect square on screen. Width and Height must be identical.
-                mainImage.setSize([0.45, 0.45]); 
+                // Perfect mathematical square
+                mainImage.setPos([0, 0.14]); 
+                mainImage.setSize([0.40, 0.40]); 
             } else {
                 mainImage.setPos([0, 0.12]);
                 mainImage.setSize([0.80, 0.40]);
             }
             
-            // Push text up for image trials
-            mainQ.setPos([0, 0.43]);
-            mainQ.setHeight(0.028);
-            mainQ.setWrapWidth(1.4); 
+            // Push text up for image trials, safely away from images
+            mainQ.setPos([0, 0.42]);
+            mainQ.setHeight(0.026);
+            mainQ.setWrapWidth(1.2); 
         } else { 
             // Phase without images (LN, VR)
             mainImage.setOpacity(0.0); 
             
-            // Center text, make it huge
+            // Center text, elegant size
             mainQ.setPos([0, 0.15]);
-            mainQ.setHeight(0.045);
+            mainQ.setHeight(0.040);
             
-            // MASSIVE MARGINS
-            mainQ.setWrapWidth(0.65); 
+            // MARGINS FIXED: 0.90 forces generous margins on the left and right
+            mainQ.setWrapWidth(0.90); 
         }
 
         // Set question text
@@ -230,7 +231,7 @@ function routineBegin(thisTrial, blockName) {
             choiceText = choiceText ? choiceText.toString().replace(/\\n/g, '\n') : "";
             
             opt_texts[i-1].setText(choiceText);
-            // Reset colors at start of trial
+            // Reset colors at the start of each question
             opt_boxes[i-1].setFillColor(new util.Color('white'));
         }
         
@@ -248,18 +249,17 @@ function routineFrame(thisTrial, blockName) {
         opt_boxes.forEach(b => b.setAutoDraw(true)); 
         opt_texts.forEach(t => t.setAutoDraw(true));
         
-        // --- UX: MOUSE HOVER ILLUMINATION ---
+        // --- MOUSE HOVER EFFECT ---
         for (let i = 0; i < 8; i++) {
             if (opt_boxes[i].contains(mouse)) {
-                // Change to light gray if mouse is over it
+                // Light gray when mouse is over
                 opt_boxes[i].setFillColor(new util.Color('#e0e0e0'));
             } else {
-                // Keep white if mouse is not over it
+                // White when mouse is not over
                 opt_boxes[i].setFillColor(new util.Color('white'));
             }
         }
 
-        // Enforce strict click mechanism
         if (mouse.getPressed()[0] === 0) window.mouseWasReleased = true;
         
         if (mouse.getPressed()[0] === 1 && window.mouseWasReleased) {
