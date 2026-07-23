@@ -278,7 +278,7 @@ async function quitPsychoJS() {
     psychoJS.experiment.save();
     const csvText = psychoJS.experiment.getResultAsCsv();
 
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6BdYv_0FYkGpEGL6ZqsDaPpZErPZaJvgw6cNWXN8/dev";
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwJgoNMkN8L7LiR7MNG8cpPutI8Pe6-DDP8rtclpnsQ0Mqgfil_SQfZNCM0mLQpF4hI/exec";
 
     const iframe = document.createElement('iframe');
     iframe.name = 'hidden_iframe';
